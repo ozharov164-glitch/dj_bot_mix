@@ -5,10 +5,9 @@ on:
     branches: [main, master]
   pull_request:
 
+# Least privilege at workflow level — Pages write only on deploy job.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages-${{ github.ref }}
@@ -17,6 +16,8 @@ concurrency:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -34,21 +35,40 @@ jobs:
         run: pnpm typecheck
       - name: Test
         run: pnpm test
-      - name: Build
+      - name: Build (CI-safe, localhost allowed)
         env:
-          VITE_API_URL: ${{ vars.VITE_API_URL || 'http://localhost:3000' }}
+          VITE_ALLOW_DEV_API: "true"
+          VITE_API_URL: http://localhost:3000
+          VITE_BASE_PATH: /dj_bot_mix/
+        run: pnpm build
+      - name: Build production Pages artifact
+        id: pages_build
+        if: >-
+          github.event_name == 'push' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
+          vars.ENABLE_PAGES_DEPLOY == 'true' &&
+          vars.VITE_API_URL != ''
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
           VITE_BASE_PATH: /dj_bot_mix/
         run: pnpm build
       - name: Upload Pages artifact
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: steps.pages_build.outcome == 'success'
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
   deploy:
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && vars.ENABLE_PAGES_DEPLOY == 'true'
+    if: >-
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
+      vars.ENABLE_PAGES_DEPLOY == 'true' &&
+      vars.VITE_API_URL != ''
     needs: quality
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

@@ -19,7 +19,6 @@ import { ProgressBar } from "../components/ProgressBar";
 import { TrackList } from "../components/TrackList";
 import {
   buildHtmlAccept,
-  projectAfterUploadResponse,
   validateClientUploadFilename,
 } from "../lib/file-accept";
 
@@ -153,9 +152,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
         file,
         setUploadProgress,
       );
-      setProject(
-        projectAfterUploadResponse(uploaded) as Project,
-      );
+      setProject(uploaded.project);
     } catch (err) {
       setError(
         err instanceof ApiError ? err.message : "Не удалось загрузить файл",

@@ -1,4 +1,34 @@
-const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+import { resolveApiBaseUrl } from "../config/api-url";
+import {
+  ApiError,
+  type ApiErrorBody,
+  type AuthResponse,
+  type Capabilities,
+  type ConsentState,
+  type CreateProjectBody,
+  type MeResponse,
+  type PatchProjectBody,
+  type Project,
+  type ProjectsListResponse,
+  type UploadProjectFileResponse,
+} from "./client-types";
+import {
+  parseApiErrorBody,
+  parseAuthResponse,
+  parseCapabilities,
+  parseConsentState,
+  parseMeResponse,
+  parseProject,
+  parseUploadResponse,
+} from "./parsers";
+
+export * from "./client-types";
+
+const API_BASE = resolveApiBaseUrl({
+  raw: import.meta.env.VITE_API_URL,
+  mode: import.meta.env.MODE,
+  allowDevApi: import.meta.env.VITE_ALLOW_DEV_API === "true",
+});
 
 let bearerToken: string | null = null;
 
@@ -10,186 +40,66 @@ export function getBearerToken(): string | null {
   return bearerToken;
 }
 
-export type ApiErrorBody = {
-  error: {
-    code: string;
-    message: string;
-    requestId?: string;
-  };
-};
-
-export class ApiError extends Error {
-  readonly code: string;
-  readonly requestId?: string;
-
-  constructor(code: string, message: string, requestId?: string) {
-    super(message);
-    this.name = "ApiError";
-    this.code = code;
-    this.requestId = requestId;
-  }
+export function getApiBaseUrl(): string {
+  return API_BASE;
 }
 
-export type ProjectType = "SINGLE_EFFECT" | "MIX";
-
-export type ProjectStatus =
-  | "DRAFT"
-  | "UPLOADING"
-  | "READY_TO_RENDER"
-  | "QUEUED"
-  | "ANALYZING"
-  | "RENDERING"
-  | "COMPLETED"
-  | "FAILED"
-  | "EXPIRED";
-
-export type SingleEffect =
-  | "normalise"
-  | "speed_pitch"
-  | "slow_reverb"
-  | "echo"
-  | "eq"
-  | "bass_boost";
-
-export type TransitionStyle = "safe" | "smooth" | "energetic";
-export type OutputFormat = "mp3" | "aac";
-
-export type AudioFileStatus =
-  | "PENDING"
-  | "UPLOADED"
-  | "VALIDATED"
-  | "REJECTED"
-  | "EXPIRED"
-  | "DELETED";
-
-export type AudioFile = {
-  id: string;
-  originalFilename: string;
-  mimeType: string;
-  sizeBytes: number;
-  durationSeconds: number | null;
-  position: number;
-  status: AudioFileStatus;
-  expiresAt: string;
-  createdAt: string;
-};
-
-export type Project = {
-  id: string;
-  title: string;
-  type: ProjectType;
-  status: ProjectStatus;
-  transitionStyle: TransitionStyle;
-  outputFormat: OutputFormat;
-  singleEffect: SingleEffect | null;
-  createdAt: string;
-  updatedAt: string;
-  files: AudioFile[];
-};
-
-export type User = {
-  id: string;
-  username: string | null;
-};
-
-export type ConsentState =
-  | {
-      policyVersion: string;
-      accepted: false;
-      consent: null;
-    }
-  | {
-      policyVersion: string;
-      accepted: true;
-      consent: {
-        id: string;
-        policyVersion: string;
-        privacyAcceptedAt: string | null;
-        termsAcceptedAt: string | null;
-        rightsConfirmedAt: string | null;
-        createdAt: string;
-      };
-    };
-
-export type Capabilities = {
-  stage: number;
-  limits: {
-    maxTracksPerProject: number;
-    maxFileSizeBytes: number;
-    maxProjectSizeBytes: number;
-    maxOutputDurationSeconds: number;
-    originalRetentionHours: number;
-    allowedInputExtensions: string[];
-  };
-  effects: SingleEffect[];
-  transitionStyles: TransitionStyle[];
-  outputFormats: OutputFormat[];
-  policyVersion: string;
-  features: {
-    render: boolean;
-    payments: boolean;
-  };
-};
-
-export type AuthResponse = {
-  token: string;
-  tokenType: "Bearer";
-  expiresIn: number;
-  expiresAt: string;
-  user: User;
-};
-
-export type MeResponse = User & {
-  consent: ConsentState;
-  policyVersion: string;
-};
-
-export type ProjectsListResponse = {
-  items: Project[];
-  nextCursor: string | null;
-};
-
-export type UploadProjectFileResponse = {
-  file: AudioFile;
-  project: Project;
-};
-
-async function parseJson<T>(response: Response): Promise<T> {
+async function parseJsonUnknown(response: Response): Promise<unknown> {
   const text = await response.text();
   if (!text) {
-    return undefined as T;
+    return undefined;
   }
-  return JSON.parse(text) as T;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    throw new ApiError("PARSE_ERROR", "Некорректный JSON от сервера");
+  }
 }
 
-async function handleResponse<T>(response: Response): Promise<T> {
+async function handleResponse<T>(
+  response: Response,
+  parse: (value: unknown) => T,
+): Promise<T> {
   if (response.ok) {
     if (response.status === 204) {
       return undefined as T;
     }
-    return parseJson<T>(response);
+    const body = await parseJsonUnknown(response);
+    try {
+      return parse(body);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("PARSE_ERROR", "Некорректный ответ сервера");
+    }
   }
 
-  let body: ApiErrorBody | undefined;
+  let parsedError: ApiErrorBody | null = null;
   try {
-    body = await parseJson<ApiErrorBody>(response);
+    const body = await parseJsonUnknown(response);
+    parsedError = parseApiErrorBody(body);
   } catch {
-    // ignore malformed error body
+    // Malformed error JSON must not throw a secondary exception
+    parsedError = null;
   }
 
   throw new ApiError(
-    body?.error.code ?? "UNKNOWN",
-    body?.error.message ?? "Произошла ошибка",
-    body?.error.requestId,
+    parsedError?.error.code ?? "UNKNOWN",
+    parsedError?.error.message ?? "Произошла ошибка",
+    parsedError?.error.requestId,
   );
 }
 
 export async function apiFetch<T>(
   path: string,
   init: RequestInit = {},
+  parse: (value: unknown) => T = (v) => v as T,
 ): Promise<T> {
   const headers = new Headers(init.headers);
-  if (!headers.has("Content-Type") && init.body && !(init.body instanceof FormData)) {
+  if (
+    !headers.has("Content-Type") &&
+    init.body &&
+    !(init.body instanceof FormData)
+  ) {
     headers.set("Content-Type", "application/json");
   }
   if (bearerToken) {
@@ -201,102 +111,127 @@ export async function apiFetch<T>(
     headers,
   });
 
-  return handleResponse<T>(response);
+  return handleResponse(response, parse);
 }
 
 export function authTelegram(initData: string): Promise<AuthResponse> {
-  return apiFetch<AuthResponse>("/v1/auth/telegram", {
-    method: "POST",
-    body: JSON.stringify({ initData }),
-  });
+  return apiFetch(
+    "/v1/auth/telegram",
+    {
+      method: "POST",
+      body: JSON.stringify({ initData }),
+    },
+    parseAuthResponse,
+  );
 }
 
 export function fetchMe(): Promise<MeResponse> {
-  return apiFetch<MeResponse>("/v1/me");
+  return apiFetch("/v1/me", {}, parseMeResponse);
 }
 
 export function fetchCapabilities(): Promise<Capabilities> {
-  return apiFetch<Capabilities>("/v1/capabilities");
+  return apiFetch("/v1/capabilities", {}, parseCapabilities);
 }
 
 export function fetchCurrentConsent(): Promise<ConsentState> {
-  return apiFetch<ConsentState>("/v1/consents/current");
+  return apiFetch("/v1/consents/current", {}, parseConsentState);
 }
 
 export function submitConsent(): Promise<ConsentState> {
-  return apiFetch<ConsentState>("/v1/consents", {
-    method: "POST",
-    body: JSON.stringify({
-      privacyAccepted: true,
-      termsAccepted: true,
-      rightsConfirmed: true,
-    }),
-  });
+  return apiFetch(
+    "/v1/consents",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        privacyAccepted: true,
+        termsAccepted: true,
+        rightsConfirmed: true,
+      }),
+    },
+    parseConsentState,
+  );
 }
 
 export function listProjects(): Promise<ProjectsListResponse> {
-  return apiFetch<ProjectsListResponse>("/v1/projects");
-}
-
-export function getProject(projectId: string): Promise<Project> {
-  return apiFetch<Project>(`/v1/projects/${projectId}`);
-}
-
-export type CreateProjectBody = {
-  title: string;
-  type: ProjectType;
-  transitionStyle?: TransitionStyle;
-  outputFormat?: OutputFormat;
-  singleEffect?: SingleEffect;
-};
-
-export function createProject(body: CreateProjectBody): Promise<Project> {
-  return apiFetch<Project>("/v1/projects", {
-    method: "POST",
-    body: JSON.stringify(body),
+  return apiFetch("/v1/projects", {}, (value) => {
+    if (typeof value !== "object" || value === null) {
+      throw new ApiError("PARSE_ERROR", "Некорректный список проектов");
+    }
+    const record = value as Record<string, unknown>;
+    if (!Array.isArray(record.items)) {
+      throw new ApiError("PARSE_ERROR", "Некорректный список проектов");
+    }
+    let nextCursor: string | null = null;
+    if (record.nextCursor === null || record.nextCursor === undefined) {
+      nextCursor = null;
+    } else if (typeof record.nextCursor === "string") {
+      nextCursor = record.nextCursor;
+    } else {
+      throw new ApiError("PARSE_ERROR", "Некорректный список проектов");
+    }
+    return {
+      items: record.items.map(parseProject),
+      nextCursor,
+    };
   });
 }
 
-export type PatchProjectBody = {
-  title?: string;
-  transitionStyle?: TransitionStyle;
-  outputFormat?: OutputFormat;
-  singleEffect?: SingleEffect;
-};
+export function getProject(projectId: string): Promise<Project> {
+  return apiFetch(`/v1/projects/${projectId}`, {}, parseProject);
+}
+
+export function createProject(body: CreateProjectBody): Promise<Project> {
+  return apiFetch(
+    "/v1/projects",
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+    parseProject,
+  );
+}
 
 export function patchProject(
   projectId: string,
   body: PatchProjectBody,
 ): Promise<Project> {
-  return apiFetch<Project>(`/v1/projects/${projectId}`, {
-    method: "PATCH",
-    body: JSON.stringify(body),
-  });
+  return apiFetch(
+    `/v1/projects/${projectId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    },
+    parseProject,
+  );
 }
 
 export function deleteProject(projectId: string): Promise<void> {
-  return apiFetch<void>(`/v1/projects/${projectId}`, {
-    method: "DELETE",
-  });
+  return apiFetch(`/v1/projects/${projectId}`, { method: "DELETE" }, () => undefined);
 }
 
 export function reorderProjectFiles(
   projectId: string,
   fileIds: string[],
 ): Promise<Project> {
-  return apiFetch<Project>(`/v1/projects/${projectId}/reorder`, {
-    method: "POST",
-    body: JSON.stringify({ fileIds }),
-  });
+  return apiFetch(
+    `/v1/projects/${projectId}/reorder`,
+    {
+      method: "POST",
+      body: JSON.stringify({ fileIds }),
+    },
+    parseProject,
+  );
 }
 
 export function deleteProjectFile(
   projectId: string,
   fileId: string,
 ): Promise<void> {
-  return apiFetch<void>(`/v1/projects/${projectId}/files/${fileId}`, {
-    method: "DELETE",
-  });
+  return apiFetch(
+    `/v1/projects/${projectId}/files/${fileId}`,
+    { method: "DELETE" },
+    () => undefined,
+  );
 }
 
 export function uploadProjectFile(
@@ -320,27 +255,35 @@ export function uploadProjectFile(
     });
 
     xhr.addEventListener("load", () => {
+      let raw: unknown;
+      try {
+        raw = xhr.responseText ? JSON.parse(xhr.responseText) : undefined;
+      } catch {
+        reject(new ApiError("PARSE_ERROR", "Некорректный JSON от сервера"));
+        return;
+      }
+
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
-          resolve(JSON.parse(xhr.responseText) as UploadProjectFileResponse);
-        } catch {
-          reject(new ApiError("PARSE_ERROR", "Не удалось разобрать ответ сервера"));
+          resolve(parseUploadResponse(raw));
+        } catch (err) {
+          if (err instanceof ApiError) {
+            reject(err);
+          } else {
+            reject(new ApiError("PARSE_ERROR", "Некорректный ответ загрузки"));
+          }
         }
         return;
       }
 
-      try {
-        const body = JSON.parse(xhr.responseText) as ApiErrorBody;
-        reject(
-          new ApiError(
-            body.error.code,
-            body.error.message,
-            body.error.requestId,
-          ),
-        );
-      } catch {
-        reject(new ApiError("UNKNOWN", "Ошибка загрузки файла"));
-      }
+      const parsedError = parseApiErrorBody(raw);
+      reject(
+        new ApiError(
+          parsedError?.error.code ?? "UNKNOWN",
+          parsedError?.error.message ?? "Ошибка загрузки файла",
+          parsedError?.error.requestId,
+        ),
+      );
     });
 
     xhr.addEventListener("error", () => {
