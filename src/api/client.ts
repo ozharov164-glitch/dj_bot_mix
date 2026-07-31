@@ -458,7 +458,7 @@ export async function downloadRenderResult(renderJobId: string): Promise<void> {
   const blob = await response.blob();
   const disposition = response.headers.get("Content-Disposition") ?? "";
   const match = /filename="([^"]+)"/i.exec(disposition);
-  const filename = match?.[1] ?? "mixflow-result.bin";
+  const filename = match?.[1] ?? "fadeline-result.bin";
   const objectUrl = URL.createObjectURL(blob);
   try {
     const anchor = document.createElement("a");

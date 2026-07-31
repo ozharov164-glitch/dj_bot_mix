@@ -99,7 +99,7 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
     <main className="page">
       <header className="page-header">
         <div>
-          <p className="brand">MixFlow</p>
+          <p className="brand">FADELINE</p>
           <h1>Мои проекты</h1>
         </div>
         <Button onClick={onCreate}>Новый</Button>

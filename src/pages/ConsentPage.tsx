@@ -44,7 +44,7 @@ export function ConsentPage() {
   return (
     <main className="page">
       <header className="hero">
-        <p className="brand">MixFlow</p>
+        <p className="brand">FADELINE</p>
         <h1>Согласие перед началом</h1>
         <p className="lead">
           Перед загрузкой файлов подтвердите, что понимаете правила сервиса.
@@ -89,7 +89,7 @@ export function ConsentPage() {
             >
               пользовательское соглашение
             </button>{" "}
-            и правила использования MixFlow.
+            и правила использования FADELINE.
           </span>
         </label>
 

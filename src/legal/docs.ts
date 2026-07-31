@@ -25,8 +25,8 @@ export const LEGAL_DOCS: Record<LegalDocId, LegalDoc> = {
     draftBanner: DRAFT,
     sections: [
       {
-        heading: "Что делает MixFlow",
-        body: "MixFlow помогает собрать офлайн-микс из файлов, которые вы загружаете сами. Это не каталог музыки, не стриминг и не AI-генератор.",
+        heading: "Что делает FADELINE",
+        body: "FADELINE помогает собрать офлайн-микс из файлов, которые вы загружаете сами. Это не каталог музыки, не стриминг и не AI-генератор.",
       },
       {
         heading: "Права на файлы",

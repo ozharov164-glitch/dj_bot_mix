@@ -48,7 +48,7 @@ function AppShell() {
       <div className={shellClass}>
         <main className="page">
           <header className="hero">
-            <p className="brand">MixFlow</p>
+            <p className="brand">FADELINE</p>
             <h1>Ошибка входа</h1>
           </header>
           <ErrorBanner message={error ?? "Неизвестная ошибка"} onRetry={retry} />

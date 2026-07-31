@@ -21,8 +21,8 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
   return (
     <main className="page">
       <header className="hero">
-        <p className="brand">MixFlow</p>
-        <h1>Добро пожаловать</h1>
+        <p className="brand">FADELINE</p>
+        <h1>Дыши музыкой</h1>
         <p className="lead">
           Соберите офлайн-микс или обработайте один трек — только из файлов,
           которые вы загружаете сами. Мы не предоставляем каталог музыки и не

@@ -2,7 +2,7 @@ export function OutsideTelegramPage() {
   return (
     <main className="page">
       <header className="hero">
-        <p className="brand">MixFlow</p>
+        <p className="brand">FADELINE</p>
         <h1>Только внутри Telegram</h1>
         <p className="lead">
           Это Mini App работает только при открытии из Telegram-бота. Здесь нет
