@@ -50,9 +50,10 @@ export function validateClientUploadFilename(
 }
 
 /** Prefer server-returned project after upload `{ file, project }`. */
-export function projectAfterUploadResponse<T extends { project: unknown }>(
-  response: T,
-): T["project"] {
+export function projectAfterUploadResponse(response: {
+  file: unknown;
+  project: unknown;
+}): unknown {
   if (
     response &&
     typeof response === "object" &&

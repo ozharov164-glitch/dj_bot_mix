@@ -2,13 +2,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ApiError,
   deleteProjectFile,
+  downloadRenderResult,
+  enqueueRender,
   formatBytes,
   getProject,
+  getRenderJob,
   patchProject,
   reorderProjectFiles,
   uploadProjectFile,
   type OutputFormat,
   type Project,
+  type RenderJob,
   type SingleEffect,
   type TransitionStyle,
 } from "../api/client";
@@ -19,8 +23,15 @@ import { ProgressBar } from "../components/ProgressBar";
 import { TrackList } from "../components/TrackList";
 import {
   buildHtmlAccept,
+  projectAfterUploadResponse,
   validateClientUploadFilename,
 } from "../lib/file-accept";
+import {
+  canEnqueueRender,
+  nextRenderPollDelayMs,
+  renderStatusDescription,
+  renderStatusTitle,
+} from "../lib/render-status";
 
 type ProjectDetailPageProps = {
   projectId: string;
@@ -46,21 +57,27 @@ const EDITABLE_STATUSES: Project["status"][] = [
   "DRAFT",
   "UPLOADING",
   "READY_TO_RENDER",
+  "FAILED",
 ];
 
 export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps) {
   const { capabilities } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [project, setProject] = useState<Project | null>(null);
+  const [renderJob, setRenderJob] = useState<RenderJob | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [rendering, setRendering] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [uploadName, setUploadName] = useState<string | null>(null);
 
   const limits = capabilities?.limits;
   const maxFileBytes = limits?.maxFileSizeBytes;
   const maxTracks = limits?.maxTracksPerProject ?? 15;
+  const renderFeature = capabilities?.features.render === true;
+  const mixRenderFeature = capabilities?.features.mixRender === true;
   const allowedExtensions = (
     limits?.allowedInputExtensions ?? [
       "mp3",
@@ -79,6 +96,17 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
     try {
       const data = await getProject(projectId);
       setProject(data);
+      try {
+        const job = await getRenderJob(projectId);
+        setRenderJob(job);
+      } catch (err) {
+        if (
+          err instanceof ApiError &&
+          (err.code === "PROJECT_NOT_FOUND" || err.code === "NOT_FOUND")
+        ) {
+          setRenderJob(null);
+        }
+      }
     } catch (err) {
       setError(
         err instanceof ApiError ? err.message : "Не удалось загрузить проект",
@@ -91,6 +119,53 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Poll render status with backoff while queued/running; cleanup on unmount.
+  useEffect(() => {
+    if (!renderJob) return;
+    if (renderJob.status !== "QUEUED" && renderJob.status !== "RUNNING") {
+      return;
+    }
+
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let attempt = 0;
+
+    const tick = async () => {
+      if (cancelled) return;
+      try {
+        const job = await getRenderJob(projectId);
+        if (cancelled) return;
+        setRenderJob(job);
+        if (job.status === "QUEUED" || job.status === "RUNNING") {
+          const delay = nextRenderPollDelayMs(attempt);
+          attempt += 1;
+          timer = setTimeout(() => {
+            void tick();
+          }, delay);
+        } else {
+          const refreshed = await getProject(projectId);
+          if (!cancelled) setProject(refreshed);
+        }
+      } catch {
+        if (cancelled) return;
+        const delay = nextRenderPollDelayMs(attempt);
+        attempt += 1;
+        timer = setTimeout(() => {
+          void tick();
+        }, delay);
+      }
+    };
+
+    timer = setTimeout(() => {
+      void tick();
+    }, nextRenderPollDelayMs(0));
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [projectId, renderJob?.id, renderJob?.status]);
 
   const editable =
     project !== null && EDITABLE_STATUSES.includes(project.status);
@@ -152,7 +227,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
         file,
         setUploadProgress,
       );
-      setProject(uploaded.project);
+      setProject(projectAfterUploadResponse(uploaded) as Project);
     } catch (err) {
       setError(
         err instanceof ApiError ? err.message : "Не удалось загрузить файл",
@@ -212,6 +287,39 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
     }
   }
 
+  async function handleRender() {
+    if (!project) return;
+    setRendering(true);
+    setError(null);
+    try {
+      const job = await enqueueRender(project.id);
+      setRenderJob(job);
+      const refreshed = await getProject(project.id);
+      setProject(refreshed);
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : "Не удалось запустить обработку",
+      );
+    } finally {
+      setRendering(false);
+    }
+  }
+
+  async function handleDownload() {
+    if (!renderJob || renderJob.status !== "COMPLETED") return;
+    setDownloading(true);
+    setError(null);
+    try {
+      await downloadRenderResult(renderJob.id);
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : "Не удалось скачать результат",
+      );
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   if (loading && !project) {
     return (
       <main className="page">
@@ -234,6 +342,18 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
     capabilities?.transitionStyles ??
     (Object.keys(TRANSITION_LABELS) as TransitionStyle[]);
   const formats = capabilities?.outputFormats ?? (["mp3", "aac"] as OutputFormat[]);
+  const canRender = canEnqueueRender({
+    projectType: project.type,
+    projectStatus: project.status,
+    renderFeature,
+    mixRenderFeature,
+  });
+  const jobActive =
+    renderJob?.status === "QUEUED" || renderJob?.status === "RUNNING";
+  const transitionHint =
+    project.type === "MIX"
+      ? "Переходы: автоматические плавные переходы (без beatmatching)."
+      : null;
 
   return (
     <main className="page">
@@ -249,17 +369,52 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
         </div>
       </header>
 
-      {project.status === "READY_TO_RENDER" ? (
+      {error ? <ErrorBanner message={error} /> : null}
+
+      {renderJob ? (
+        <section
+          className={
+            renderJob.status === "COMPLETED"
+              ? "panel panel--success"
+              : renderJob.status === "FAILED"
+                ? "panel panel--danger"
+                : "panel"
+          }
+          role="status"
+          aria-live="polite"
+        >
+          <strong>{renderStatusTitle(renderJob.status)}</strong>
+          <p className="muted">
+            {renderStatusDescription(renderJob.status, {
+              queuePosition: renderJob.queuePosition,
+              errorMessage: renderJob.errorMessage,
+            })}
+          </p>
+          {renderJob.status === "COMPLETED" && renderJob.result ? (
+            <p className="muted">
+              Размер: {formatBytes(renderJob.result.sizeBytes)}. Хранится до{" "}
+              {new Date(renderJob.result.expiresAt).toLocaleString("ru-RU")}.
+            </p>
+          ) : null}
+          {renderJob.status === "COMPLETED" ? (
+            <Button
+              fullWidth
+              disabled={downloading}
+              onClick={() => void handleDownload()}
+            >
+              {downloading ? "Скачивание…" : "Скачать результат"}
+            </Button>
+          ) : null}
+        </section>
+      ) : project.status === "READY_TO_RENDER" ? (
         <section className="panel panel--success" role="status">
           <strong>Проект готов к обработке</strong>
           <p className="muted">
-            Все условия выполнены. Обработка аудио будет доступна на следующем
-            этапе разработки.
+            Все условия выполнены. Нажмите «Обработать», чтобы поставить задачу
+            в очередь.
           </p>
         </section>
       ) : null}
-
-      {error ? <ErrorBanner message={error} /> : null}
 
       <section className="panel">
         <h2 className="panel__title">Загрузка</h2>
@@ -273,7 +428,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
           type="file"
           accept={acceptAttr}
           className="file-input"
-          disabled={!editable || uploadProgress !== null}
+          disabled={!editable || uploadProgress !== null || jobActive}
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) void handleUpload(file);
@@ -281,7 +436,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
         />
         <Button
           fullWidth
-          disabled={!editable || uploadProgress !== null}
+          disabled={!editable || uploadProgress !== null || jobActive}
           onClick={() => fileInputRef.current?.click()}
         >
           Выбрать файл
@@ -298,8 +453,8 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
         <h2 className="panel__title">Треки</h2>
         <TrackList
           files={project.files}
-          editable={editable}
-          busy={busy || uploadProgress !== null}
+          editable={editable && !jobActive}
+          busy={busy || uploadProgress !== null || jobActive}
           onMoveUp={(id) => moveFile(id, -1)}
           onMoveDown={(id) => moveFile(id, 1)}
           onDelete={(id) => void handleDeleteFile(id)}
@@ -314,7 +469,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
             <select
               className="field__input"
               value={project.singleEffect ?? "normalise"}
-              disabled={!editable || busy}
+              disabled={!editable || busy || jobActive}
               onChange={(e) =>
                 void handleSettingsChange({
                   singleEffect: e.target.value as SingleEffect,
@@ -334,7 +489,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
             <select
               className="field__input"
               value={project.transitionStyle}
-              disabled={!editable || busy}
+              disabled={!editable || busy || jobActive}
               onChange={(e) =>
                 void handleSettingsChange({
                   transitionStyle: e.target.value as TransitionStyle,
@@ -347,6 +502,9 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
                 </option>
               ))}
             </select>
+            <span className="muted field__hint">
+              автоматические плавные переходы — без гарантии beatmatching
+            </span>
           </label>
         )}
 
@@ -355,7 +513,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
           <select
             className="field__input"
             value={project.outputFormat}
-            disabled={!editable || busy}
+            disabled={!editable || busy || jobActive}
             onChange={(e) =>
               void handleSettingsChange({
                 outputFormat: e.target.value as OutputFormat,
@@ -372,9 +530,25 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
       </section>
 
       <section className="panel panel--muted">
-        <Button fullWidth disabled title="Будет доступно на следующем этапе">
-          Обработка будет в следующем этапе
-        </Button>
+        {(project.type === "SINGLE_EFFECT" && renderFeature) ||
+        (project.type === "MIX" && mixRenderFeature) ? (
+          <>
+            {transitionHint ? (
+              <p className="muted">{transitionHint}</p>
+            ) : null}
+            <Button
+              fullWidth
+              disabled={!canRender || rendering || jobActive}
+              onClick={() => void handleRender()}
+            >
+              {rendering || jobActive ? "Обработка…" : "Обработать"}
+            </Button>
+          </>
+        ) : (
+          <Button fullWidth disabled title="Обработка пока недоступна">
+            Обработка недоступна
+          </Button>
+        )}
       </section>
     </main>
   );

@@ -104,6 +104,18 @@ body {
   margin-top: 0.75rem;
 }
 
+.link-button {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .panel {
   padding: 1rem 1.1rem;
   background: var(--panel);
@@ -119,6 +131,11 @@ body {
 .panel--success {
   background: var(--accent-soft);
   border-color: var(--accent);
+}
+
+.panel--danger {
+  background: rgba(180, 35, 24, 0.08);
+  border-color: var(--danger);
 }
 
 .panel--muted {
@@ -325,6 +342,12 @@ body {
   font-size: 0.88rem;
   font-weight: 600;
   color: var(--muted);
+}
+
+.field__hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
 }
 
 .field__input {

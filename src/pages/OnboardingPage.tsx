@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { Button } from "../components/Button";
 import { useAuth } from "../auth/AuthProvider";
 import { PUBLIC_LIMITS } from "../config/public-limits";
+import type { LegalDocId } from "../legal/docs";
+import { LegalPage } from "./LegalPage";
 
 type OnboardingPageProps = {
   onContinue: () => void;
@@ -9,6 +12,11 @@ type OnboardingPageProps = {
 export function OnboardingPage({ onContinue }: OnboardingPageProps) {
   const { capabilities } = useAuth();
   const limits = capabilities?.limits ?? PUBLIC_LIMITS;
+  const [legalDoc, setLegalDoc] = useState<LegalDocId | null>(null);
+
+  if (legalDoc) {
+    return <LegalPage docId={legalDoc} onBack={() => setLegalDoc(null)} />;
+  }
 
   return (
     <main className="page">
@@ -51,6 +59,52 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
         <p className="muted fine-print">
           Точные лимиты определяет сервер. Здесь — ориентир для интерфейса.
         </p>
+      </section>
+
+      <section className="panel">
+        <h2 className="panel__title">Документы (черновики)</h2>
+        <p className="muted">
+          Тексты помечены как черновики и требуют проверки юристом до публичного
+          запуска.
+        </p>
+        <ul className="limits-list">
+          <li>
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => setLegalDoc("terms")}
+            >
+              Пользовательское соглашение
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => setLegalDoc("privacy")}
+            >
+              Политика конфиденциальности
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => setLegalDoc("copyright")}
+            >
+              Правообладателям
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => setLegalDoc("refunds")}
+            >
+              Оплата и возвраты
+            </button>
+          </li>
+        </ul>
       </section>
 
       <Button fullWidth onClick={onContinue}>

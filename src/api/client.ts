@@ -1,28 +1,4 @@
 import { resolveApiBaseUrl } from "../config/api-url";
-import {
-  ApiError,
-  type ApiErrorBody,
-  type AuthResponse,
-  type Capabilities,
-  type ConsentState,
-  type CreateProjectBody,
-  type MeResponse,
-  type PatchProjectBody,
-  type Project,
-  type ProjectsListResponse,
-  type UploadProjectFileResponse,
-} from "./client-types";
-import {
-  parseApiErrorBody,
-  parseAuthResponse,
-  parseCapabilities,
-  parseConsentState,
-  parseMeResponse,
-  parseProject,
-  parseUploadResponse,
-} from "./parsers";
-
-export * from "./client-types";
 
 const API_BASE = resolveApiBaseUrl({
   raw: import.meta.env.VITE_API_URL,
@@ -40,66 +16,224 @@ export function getBearerToken(): string | null {
   return bearerToken;
 }
 
-export function getApiBaseUrl(): string {
-  return API_BASE;
+export type ApiErrorBody = {
+  error: {
+    code: string;
+    message: string;
+    requestId?: string;
+  };
+};
+
+export class ApiError extends Error {
+  readonly code: string;
+  readonly requestId?: string;
+
+  constructor(code: string, message: string, requestId?: string) {
+    super(message);
+    this.name = "ApiError";
+    this.code = code;
+    this.requestId = requestId;
+  }
 }
 
-async function parseJsonUnknown(response: Response): Promise<unknown> {
+export type ProjectType = "SINGLE_EFFECT" | "MIX";
+
+export type ProjectStatus =
+  | "DRAFT"
+  | "UPLOADING"
+  | "READY_TO_RENDER"
+  | "QUEUED"
+  | "ANALYZING"
+  | "RENDERING"
+  | "COMPLETED"
+  | "FAILED"
+  | "EXPIRED";
+
+export type SingleEffect =
+  | "normalise"
+  | "speed_pitch"
+  | "slow_reverb"
+  | "echo"
+  | "eq"
+  | "bass_boost";
+
+export type TransitionStyle = "safe" | "smooth" | "energetic";
+export type OutputFormat = "mp3" | "aac";
+
+export type AudioFileStatus =
+  | "PENDING"
+  | "UPLOADED"
+  | "VALIDATED"
+  | "REJECTED"
+  | "EXPIRED"
+  | "DELETED";
+
+export type AudioFile = {
+  id: string;
+  originalFilename: string;
+  mimeType: string;
+  sizeBytes: number;
+  durationSeconds: number | null;
+  position: number;
+  status: AudioFileStatus;
+  expiresAt: string;
+  createdAt: string;
+};
+
+export type Project = {
+  id: string;
+  title: string;
+  type: ProjectType;
+  status: ProjectStatus;
+  transitionStyle: TransitionStyle;
+  outputFormat: OutputFormat;
+  singleEffect: SingleEffect | null;
+  createdAt: string;
+  updatedAt: string;
+  files: AudioFile[];
+};
+
+export type User = {
+  id: string;
+  username: string | null;
+};
+
+export type ConsentState =
+  | {
+      policyVersion: string;
+      accepted: false;
+      consent: null;
+    }
+  | {
+      policyVersion: string;
+      accepted: true;
+      consent: {
+        id: string;
+        policyVersion: string;
+        privacyAcceptedAt: string | null;
+        termsAcceptedAt: string | null;
+        rightsConfirmedAt: string | null;
+        createdAt: string;
+      };
+    };
+
+export type Capabilities = {
+  stage: number;
+  limits: {
+    maxTracksPerProject: number;
+    maxFileSizeBytes: number;
+    maxProjectSizeBytes: number;
+    maxOutputDurationSeconds: number;
+    originalRetentionHours: number;
+    allowedInputExtensions: string[];
+  };
+  effects: SingleEffect[];
+  transitionStyles: TransitionStyle[];
+  outputFormats: OutputFormat[];
+  policyVersion: string;
+  features: {
+    render: boolean;
+    payments: boolean;
+    mixRender?: boolean;
+    downloadTokens?: boolean;
+    botNotifications?: boolean;
+  };
+};
+
+export type RenderJobStatus = "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED";
+
+export type RenderJob = {
+  id: string;
+  projectId: string;
+  jobType: "SINGLE_EFFECT_RENDER" | "MIX_RENDER";
+  status: RenderJobStatus;
+  attempts: number;
+  maxAttempts: number;
+  queuePosition: number | null;
+  /** Single-effect name, or null for MIX. */
+  effect: string | null;
+  transitionStyle: "safe" | "smooth" | "energetic" | null;
+  trackCount: number | null;
+  outputFormat: OutputFormat;
+  errorCode: string | null;
+  errorMessage: string | null;
+  result: null | {
+    contentType: string;
+    sizeBytes: number;
+    durationSeconds: number;
+    expiresAt: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+};
+
+export type DownloadTokenResponse = {
+  token: string;
+  expiresAt: string;
+  renderJobId: string;
+};
+
+export type AuthResponse = {
+  token: string;
+  tokenType: "Bearer";
+  expiresIn: number;
+  expiresAt: string;
+  user: User;
+};
+
+export type MeResponse = User & {
+  consent: ConsentState;
+  policyVersion: string;
+};
+
+export type ProjectsListResponse = {
+  items: Project[];
+  nextCursor: string | null;
+};
+
+export type UploadProjectFileResponse = {
+  file: AudioFile;
+  project: Project;
+};
+
+async function parseJson<T>(response: Response): Promise<T> {
   const text = await response.text();
   if (!text) {
-    return undefined;
+    return undefined as T;
   }
-  try {
-    return JSON.parse(text) as unknown;
-  } catch {
-    throw new ApiError("PARSE_ERROR", "Некорректный JSON от сервера");
-  }
+  return JSON.parse(text) as T;
 }
 
-async function handleResponse<T>(
-  response: Response,
-  parse: (value: unknown) => T,
-): Promise<T> {
+async function handleResponse<T>(response: Response): Promise<T> {
   if (response.ok) {
     if (response.status === 204) {
       return undefined as T;
     }
-    const body = await parseJsonUnknown(response);
-    try {
-      return parse(body);
-    } catch (err) {
-      if (err instanceof ApiError) throw err;
-      throw new ApiError("PARSE_ERROR", "Некорректный ответ сервера");
-    }
+    return parseJson<T>(response);
   }
 
-  let parsedError: ApiErrorBody | null = null;
+  let body: ApiErrorBody | undefined;
   try {
-    const body = await parseJsonUnknown(response);
-    parsedError = parseApiErrorBody(body);
+    body = await parseJson<ApiErrorBody>(response);
   } catch {
-    // Malformed error JSON must not throw a secondary exception
-    parsedError = null;
+    // ignore malformed error body
   }
 
   throw new ApiError(
-    parsedError?.error.code ?? "UNKNOWN",
-    parsedError?.error.message ?? "Произошла ошибка",
-    parsedError?.error.requestId,
+    body?.error.code ?? "UNKNOWN",
+    body?.error.message ?? "Произошла ошибка",
+    body?.error.requestId,
   );
 }
 
 export async function apiFetch<T>(
   path: string,
   init: RequestInit = {},
-  parse: (value: unknown) => T = (v) => v as T,
 ): Promise<T> {
   const headers = new Headers(init.headers);
-  if (
-    !headers.has("Content-Type") &&
-    init.body &&
-    !(init.body instanceof FormData)
-  ) {
+  if (!headers.has("Content-Type") && init.body && !(init.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
   if (bearerToken) {
@@ -111,127 +245,102 @@ export async function apiFetch<T>(
     headers,
   });
 
-  return handleResponse(response, parse);
+  return handleResponse<T>(response);
 }
 
 export function authTelegram(initData: string): Promise<AuthResponse> {
-  return apiFetch(
-    "/v1/auth/telegram",
-    {
-      method: "POST",
-      body: JSON.stringify({ initData }),
-    },
-    parseAuthResponse,
-  );
-}
-
-export function fetchMe(): Promise<MeResponse> {
-  return apiFetch("/v1/me", {}, parseMeResponse);
-}
-
-export function fetchCapabilities(): Promise<Capabilities> {
-  return apiFetch("/v1/capabilities", {}, parseCapabilities);
-}
-
-export function fetchCurrentConsent(): Promise<ConsentState> {
-  return apiFetch("/v1/consents/current", {}, parseConsentState);
-}
-
-export function submitConsent(): Promise<ConsentState> {
-  return apiFetch(
-    "/v1/consents",
-    {
-      method: "POST",
-      body: JSON.stringify({
-        privacyAccepted: true,
-        termsAccepted: true,
-        rightsConfirmed: true,
-      }),
-    },
-    parseConsentState,
-  );
-}
-
-export function listProjects(): Promise<ProjectsListResponse> {
-  return apiFetch("/v1/projects", {}, (value) => {
-    if (typeof value !== "object" || value === null) {
-      throw new ApiError("PARSE_ERROR", "Некорректный список проектов");
-    }
-    const record = value as Record<string, unknown>;
-    if (!Array.isArray(record.items)) {
-      throw new ApiError("PARSE_ERROR", "Некорректный список проектов");
-    }
-    let nextCursor: string | null = null;
-    if (record.nextCursor === null || record.nextCursor === undefined) {
-      nextCursor = null;
-    } else if (typeof record.nextCursor === "string") {
-      nextCursor = record.nextCursor;
-    } else {
-      throw new ApiError("PARSE_ERROR", "Некорректный список проектов");
-    }
-    return {
-      items: record.items.map(parseProject),
-      nextCursor,
-    };
+  return apiFetch<AuthResponse>("/v1/auth/telegram", {
+    method: "POST",
+    body: JSON.stringify({ initData }),
   });
 }
 
-export function getProject(projectId: string): Promise<Project> {
-  return apiFetch(`/v1/projects/${projectId}`, {}, parseProject);
+export function fetchMe(): Promise<MeResponse> {
+  return apiFetch<MeResponse>("/v1/me");
 }
 
-export function createProject(body: CreateProjectBody): Promise<Project> {
-  return apiFetch(
-    "/v1/projects",
-    {
-      method: "POST",
-      body: JSON.stringify(body),
-    },
-    parseProject,
-  );
+export function fetchCapabilities(): Promise<Capabilities> {
+  return apiFetch<Capabilities>("/v1/capabilities");
 }
+
+export function fetchCurrentConsent(): Promise<ConsentState> {
+  return apiFetch<ConsentState>("/v1/consents/current");
+}
+
+export function submitConsent(): Promise<ConsentState> {
+  return apiFetch<ConsentState>("/v1/consents", {
+    method: "POST",
+    body: JSON.stringify({
+      privacyAccepted: true,
+      termsAccepted: true,
+      rightsConfirmed: true,
+    }),
+  });
+}
+
+export function listProjects(): Promise<ProjectsListResponse> {
+  return apiFetch<ProjectsListResponse>("/v1/projects");
+}
+
+export function getProject(projectId: string): Promise<Project> {
+  return apiFetch<Project>(`/v1/projects/${projectId}`);
+}
+
+export type CreateProjectBody = {
+  title: string;
+  type: ProjectType;
+  transitionStyle?: TransitionStyle;
+  outputFormat?: OutputFormat;
+  singleEffect?: SingleEffect;
+};
+
+export function createProject(body: CreateProjectBody): Promise<Project> {
+  return apiFetch<Project>("/v1/projects", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export type PatchProjectBody = {
+  title?: string;
+  transitionStyle?: TransitionStyle;
+  outputFormat?: OutputFormat;
+  singleEffect?: SingleEffect;
+};
 
 export function patchProject(
   projectId: string,
   body: PatchProjectBody,
 ): Promise<Project> {
-  return apiFetch(
-    `/v1/projects/${projectId}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    },
-    parseProject,
-  );
+  return apiFetch<Project>(`/v1/projects/${projectId}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
 }
 
 export function deleteProject(projectId: string): Promise<void> {
-  return apiFetch(`/v1/projects/${projectId}`, { method: "DELETE" }, () => undefined);
+  return apiFetch<void>(`/v1/projects/${projectId}`, {
+    method: "DELETE",
+  });
 }
 
 export function reorderProjectFiles(
   projectId: string,
   fileIds: string[],
 ): Promise<Project> {
-  return apiFetch(
-    `/v1/projects/${projectId}/reorder`,
-    {
-      method: "POST",
-      body: JSON.stringify({ fileIds }),
-    },
-    parseProject,
-  );
+  return apiFetch<Project>(`/v1/projects/${projectId}/reorder`, {
+    method: "POST",
+    body: JSON.stringify({ fileIds }),
+  });
 }
 
 export function deleteProjectFile(
   projectId: string,
   fileId: string,
 ): Promise<void> {
-  return apiFetch(
-    `/v1/projects/${projectId}/files/${fileId}`,
-    { method: "DELETE" },
-    () => undefined,
-  );
+  return apiFetch<void>(`/v1/projects/${projectId}/files/${fileId}`, {
+    method: "DELETE",
+  });
 }
 
 export function uploadProjectFile(
@@ -255,35 +364,27 @@ export function uploadProjectFile(
     });
 
     xhr.addEventListener("load", () => {
-      let raw: unknown;
-      try {
-        raw = xhr.responseText ? JSON.parse(xhr.responseText) : undefined;
-      } catch {
-        reject(new ApiError("PARSE_ERROR", "Некорректный JSON от сервера"));
-        return;
-      }
-
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
-          resolve(parseUploadResponse(raw));
-        } catch (err) {
-          if (err instanceof ApiError) {
-            reject(err);
-          } else {
-            reject(new ApiError("PARSE_ERROR", "Некорректный ответ загрузки"));
-          }
+          resolve(JSON.parse(xhr.responseText) as UploadProjectFileResponse);
+        } catch {
+          reject(new ApiError("PARSE_ERROR", "Не удалось разобрать ответ сервера"));
         }
         return;
       }
 
-      const parsedError = parseApiErrorBody(raw);
-      reject(
-        new ApiError(
-          parsedError?.error.code ?? "UNKNOWN",
-          parsedError?.error.message ?? "Ошибка загрузки файла",
-          parsedError?.error.requestId,
-        ),
-      );
+      try {
+        const body = JSON.parse(xhr.responseText) as ApiErrorBody;
+        reject(
+          new ApiError(
+            body.error.code,
+            body.error.message,
+            body.error.requestId,
+          ),
+        );
+      } catch {
+        reject(new ApiError("UNKNOWN", "Ошибка загрузки файла"));
+      }
     });
 
     xhr.addEventListener("error", () => {
@@ -319,4 +420,55 @@ export function formatDuration(seconds: number | null): string {
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
   return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+export function enqueueRender(projectId: string): Promise<RenderJob> {
+  return apiFetch<RenderJob>(`/v1/projects/${projectId}/render`, {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export function getRenderJob(projectId: string): Promise<RenderJob> {
+  return apiFetch<RenderJob>(`/v1/projects/${projectId}/render`);
+}
+
+export function mintDownloadToken(
+  renderJobId: string,
+): Promise<DownloadTokenResponse> {
+  return apiFetch<DownloadTokenResponse>(
+    `/v1/render-jobs/${renderJobId}/download-token`,
+    { method: "POST" },
+  );
+}
+
+/**
+ * Mint a short-lived token in memory, stream the blob, trigger a browser
+ * download. Never persists the token to storage.
+ */
+export async function downloadRenderResult(renderJobId: string): Promise<void> {
+  const { token } = await mintDownloadToken(renderJobId);
+  const response = await fetch(`${API_BASE}/v1/downloads/${token}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new ApiError("DOWNLOAD_FAILED", "Не удалось скачать результат");
+  }
+  const blob = await response.blob();
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const match = /filename="([^"]+)"/i.exec(disposition);
+  const filename = match?.[1] ?? "mixflow-result.bin";
+  const objectUrl = URL.createObjectURL(blob);
+  try {
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = filename;
+    anchor.rel = "noopener";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
