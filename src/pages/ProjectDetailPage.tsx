@@ -38,18 +38,18 @@ type ProjectDetailPageProps = {
 };
 
 const EFFECT_LABELS: Record<SingleEffect, string> = {
-  normalise: "Нормализация громкости",
-  speed_pitch: "Скорость и тон",
-  slow_reverb: "Замедление + реверб",
-  echo: "Эхо",
-  eq: "Эквалайзер",
-  bass_boost: "Усиление баса",
+  normalise: "Студийная нормализация",
+  speed_pitch: "Темп (без сдвига тона)",
+  slow_reverb: "Медленная атмосфера",
+  echo: "Эхо-бросок",
+  eq: "Клубный EQ",
+  bass_boost: "Плотный бас",
 };
 
 const TRANSITION_LABELS: Record<TransitionStyle, string> = {
-  safe: "Бережно",
-  smooth: "Плавно",
-  energetic: "Энергично",
+  safe: "Клубный бленд",
+  smooth: "Бас-свап",
+  energetic: "Фильтр-свип",
 };
 
 const EDITABLE_STATUSES: Project["status"][] = [
@@ -486,8 +486,8 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
                 ))}
               </select>
               <span className="field__hint">
-                Переход создаётся автоматически. Точное сведение в бит не
-                гарантируется.
+                Клубный бленд / бас-свап / фильтр-свип. Без beatmatch: темп и
+                фразы не синхронизируются автоматически.
               </span>
             </label>
           )}

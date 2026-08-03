@@ -17,18 +17,24 @@ type CreateProjectPageProps = {
 };
 
 const EFFECT_LABELS: Record<SingleEffect, string> = {
-  normalise: "Нормализация громкости",
-  speed_pitch: "Скорость и тон",
-  slow_reverb: "Замедление + реверб",
-  echo: "Эхо",
-  eq: "Эквалайзер",
-  bass_boost: "Усиление баса",
+  normalise: "Студийная нормализация",
+  speed_pitch: "Темп (без сдвига тона)",
+  slow_reverb: "Медленная атмосфера",
+  echo: "Эхо-бросок",
+  eq: "Клубный EQ",
+  bass_boost: "Плотный бас",
 };
 
 const TRANSITION_LABELS: Record<TransitionStyle, string> = {
-  safe: "Бережно",
-  smooth: "Плавно",
-  energetic: "Энергично",
+  safe: "Клубный бленд",
+  smooth: "Бас-свап",
+  energetic: "Фильтр-свип",
+};
+
+const TRANSITION_HINTS: Record<TransitionStyle, string> = {
+  safe: "Мягкий equal-power переход с лёгким разведением баса.",
+  smooth: "Один бас за раз — длинный клубный handoff середины и верха.",
+  energetic: "HPF-свип и echo throw — заметный диджейский жест.",
 };
 
 export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps) {
@@ -166,8 +172,8 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
               ))}
             </select>
             <span className="field__hint">
-              Переход создаётся автоматически. Точное сведение в бит не
-              гарантируется.
+              {TRANSITION_HINTS[transitionStyle]} Без beatmatch: темп и фразы
+              треков не синхронизируются автоматически.
             </span>
           </label>
         )}
