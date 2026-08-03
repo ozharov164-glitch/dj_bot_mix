@@ -26,9 +26,9 @@ const EFFECT_LABELS: Record<SingleEffect, string> = {
 };
 
 const TRANSITION_LABELS: Record<TransitionStyle, string> = {
-  safe: "Безопасный",
-  smooth: "Плавный",
-  energetic: "Энергичный",
+  safe: "Бережно",
+  smooth: "Плавно",
+  energetic: "Энергично",
 };
 
 export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps) {
@@ -80,11 +80,14 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
   return (
     <main className="page">
       <header className="page-header">
-        <div>
-          <Button variant="ghost" onClick={onBack}>
-            ← Назад
-          </Button>
-          <h1>Новый проект</h1>
+        <div className="page-header__main">
+          <button type="button" className="back-link" onClick={onBack}>
+            <span className="back-link__chevron" aria-hidden="true">
+              ←
+            </span>
+            Проекты
+          </button>
+          <h1 className="page-title">Новый проект</h1>
         </div>
       </header>
 
@@ -99,6 +102,9 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Например: Тренировка весна 2026"
             maxLength={120}
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
           />
         </label>
 
@@ -159,6 +165,10 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
                 </option>
               ))}
             </select>
+            <span className="field__hint">
+              Переход создаётся автоматически. Точное сведение в бит не
+              гарантируется.
+            </span>
           </label>
         )}
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
 import { ErrorBanner } from "./components/ErrorBanner";
+import { isLocalCursorPreview } from "./dev/preview-flag";
 import { ConsentPage } from "./pages/ConsentPage";
 import { CreateProjectPage } from "./pages/CreateProjectPage";
 import { LoadingPage } from "./pages/LoadingPage";
@@ -14,16 +15,19 @@ type Route =
   | { name: "create" }
   | { name: "project"; id: string };
 
-function AppShell() {
-  const { status, colorScheme, consent, error, retry } = useAuth();
-  const [onboardingDone, setOnboardingDone] = useState(false);
-  const [route, setRoute] = useState<Route>({ name: "projects" });
+/** Mini App is dark-only; Telegram colorScheme must never flip the shell to light. */
+const SHELL_CLASS = "shell shell--dark";
 
-  const shellClass = `shell shell--${colorScheme}`;
+function AppShell() {
+  const { status, consent, error, retry } = useAuth();
+  const [onboardingDone, setOnboardingDone] = useState(() =>
+    isLocalCursorPreview(),
+  );
+  const [route, setRoute] = useState<Route>({ name: "projects" });
 
   if (status === "checking" || status === "authenticating") {
     return (
-      <div className={shellClass}>
+      <div className={SHELL_CLASS} data-testid="mixflow-shell">
         <LoadingPage
           message={
             status === "authenticating"
@@ -37,7 +41,7 @@ function AppShell() {
 
   if (status === "outside") {
     return (
-      <div className={shellClass}>
+      <div className={SHELL_CLASS} data-testid="mixflow-shell">
         <OutsideTelegramPage />
       </div>
     );
@@ -45,10 +49,13 @@ function AppShell() {
 
   if (status === "error") {
     return (
-      <div className={shellClass}>
+      <div className={SHELL_CLASS} data-testid="mixflow-shell">
         <main className="page">
           <header className="hero">
-            <p className="brand">FADELINE</p>
+            <div className="brand-block">
+              <p className="brand">FADELINE</p>
+              <p className="brand-tagline">Дыши музыкой</p>
+            </div>
             <h1>Ошибка входа</h1>
           </header>
           <ErrorBanner message={error ?? "Неизвестная ошибка"} onRetry={retry} />
@@ -59,7 +66,7 @@ function AppShell() {
 
   if (!consent?.accepted) {
     return (
-      <div className={shellClass}>
+      <div className={SHELL_CLASS} data-testid="mixflow-shell">
         <ConsentPage />
       </div>
     );
@@ -67,14 +74,19 @@ function AppShell() {
 
   if (!onboardingDone) {
     return (
-      <div className={shellClass}>
+      <div className={SHELL_CLASS} data-testid="mixflow-shell">
         <OnboardingPage onContinue={() => setOnboardingDone(true)} />
       </div>
     );
   }
 
+  const withDock = route.name === "projects";
+
   return (
-    <div className={shellClass} data-testid="mixflow-shell">
+    <div
+      className={`${SHELL_CLASS}${withDock ? " shell--with-dock" : ""}`}
+      data-testid="mixflow-shell"
+    >
       {route.name === "projects" ? (
         <ProjectsPage
           onCreate={() => setRoute({ name: "create" })}

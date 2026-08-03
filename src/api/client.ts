@@ -1,3 +1,4 @@
+import { isLocalCursorPreview } from "../dev/preview-flag";
 import { resolveApiBaseUrl } from "../config/api-url";
 
 const API_BASE = resolveApiBaseUrl({
@@ -256,18 +257,31 @@ export function authTelegram(initData: string): Promise<AuthResponse> {
 }
 
 export function fetchMe(): Promise<MeResponse> {
+  if (isLocalCursorPreview()) {
+    // Dynamic import: local-preview imports types from this module.
+    return import("../dev/local-preview").then((m) => m.previewFetchMe());
+  }
   return apiFetch<MeResponse>("/v1/me");
 }
 
 export function fetchCapabilities(): Promise<Capabilities> {
+  if (isLocalCursorPreview()) {
+    return import("../dev/local-preview").then((m) => m.PREVIEW_CAPABILITIES);
+  }
   return apiFetch<Capabilities>("/v1/capabilities");
 }
 
 export function fetchCurrentConsent(): Promise<ConsentState> {
+  if (isLocalCursorPreview()) {
+    return import("../dev/local-preview").then((m) => m.PREVIEW_CONSENT);
+  }
   return apiFetch<ConsentState>("/v1/consents/current");
 }
 
 export function submitConsent(): Promise<ConsentState> {
+  if (isLocalCursorPreview()) {
+    return import("../dev/local-preview").then((m) => m.PREVIEW_CONSENT);
+  }
   return apiFetch<ConsentState>("/v1/consents", {
     method: "POST",
     body: JSON.stringify({
@@ -279,10 +293,18 @@ export function submitConsent(): Promise<ConsentState> {
 }
 
 export function listProjects(): Promise<ProjectsListResponse> {
+  if (isLocalCursorPreview()) {
+    return import("../dev/local-preview").then((m) => m.previewListProjects());
+  }
   return apiFetch<ProjectsListResponse>("/v1/projects");
 }
 
 export function getProject(projectId: string): Promise<Project> {
+  if (isLocalCursorPreview()) {
+    return import("../dev/local-preview").then((m) =>
+      m.previewGetProject(projectId),
+    );
+  }
   return apiFetch<Project>(`/v1/projects/${projectId}`);
 }
 
@@ -295,6 +317,11 @@ export type CreateProjectBody = {
 };
 
 export function createProject(body: CreateProjectBody): Promise<Project> {
+  if (isLocalCursorPreview()) {
+    return import("../dev/local-preview").then((m) =>
+      m.previewCreateProject(body),
+    );
+  }
   return apiFetch<Project>("/v1/projects", {
     method: "POST",
     body: JSON.stringify(body),
@@ -312,6 +339,11 @@ export function patchProject(
   projectId: string,
   body: PatchProjectBody,
 ): Promise<Project> {
+  if (isLocalCursorPreview()) {
+    return import("../dev/local-preview").then((m) =>
+      m.previewPatchProject(projectId, body),
+    );
+  }
   return apiFetch<Project>(`/v1/projects/${projectId}`, {
     method: "PATCH",
     body: JSON.stringify(body),
@@ -319,6 +351,11 @@ export function patchProject(
 }
 
 export function deleteProject(projectId: string): Promise<void> {
+  if (isLocalCursorPreview()) {
+    return import("../dev/local-preview").then((m) => {
+      m.previewDeleteProject(projectId);
+    });
+  }
   return apiFetch<void>(`/v1/projects/${projectId}`, {
     method: "DELETE",
   });
@@ -328,6 +365,11 @@ export function reorderProjectFiles(
   projectId: string,
   fileIds: string[],
 ): Promise<Project> {
+  if (isLocalCursorPreview()) {
+    return import("../dev/local-preview").then((m) =>
+      m.previewReorder(projectId, fileIds),
+    );
+  }
   return apiFetch<Project>(`/v1/projects/${projectId}/reorder`, {
     method: "POST",
     body: JSON.stringify({ fileIds }),
@@ -338,6 +380,11 @@ export function deleteProjectFile(
   projectId: string,
   fileId: string,
 ): Promise<void> {
+  if (isLocalCursorPreview()) {
+    return import("../dev/local-preview").then((m) => {
+      m.previewDeleteFile(projectId, fileId);
+    });
+  }
   return apiFetch<void>(`/v1/projects/${projectId}/files/${fileId}`, {
     method: "DELETE",
   });
@@ -349,6 +396,11 @@ export function uploadProjectFile(
   onProgress: (percent: number) => void,
   signal?: AbortSignal,
 ): Promise<UploadProjectFileResponse> {
+  if (isLocalCursorPreview()) {
+    return import("../dev/local-preview").then((m) =>
+      m.previewUpload(projectId, file, onProgress),
+    );
+  }
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${API_BASE}/v1/projects/${projectId}/files`);
@@ -423,6 +475,11 @@ export function formatDuration(seconds: number | null): string {
 }
 
 export function enqueueRender(projectId: string): Promise<RenderJob> {
+  if (isLocalCursorPreview()) {
+    return import("../dev/local-preview").then((m) =>
+      m.previewEnqueueRender(projectId),
+    );
+  }
   return apiFetch<RenderJob>(`/v1/projects/${projectId}/render`, {
     method: "POST",
     body: JSON.stringify({}),
@@ -430,6 +487,11 @@ export function enqueueRender(projectId: string): Promise<RenderJob> {
 }
 
 export function getRenderJob(projectId: string): Promise<RenderJob> {
+  if (isLocalCursorPreview()) {
+    return import("../dev/local-preview").then((m) =>
+      m.previewGetRenderJob(projectId),
+    );
+  }
   return apiFetch<RenderJob>(`/v1/projects/${projectId}/render`);
 }
 
@@ -447,6 +509,11 @@ export function mintDownloadToken(
  * download. Never persists the token to storage.
  */
 export async function downloadRenderResult(renderJobId: string): Promise<void> {
+  if (isLocalCursorPreview()) {
+    const m = await import("../dev/local-preview");
+    await m.previewDownloadRenderResult();
+    return;
+  }
   const { token } = await mintDownloadToken(renderJobId);
   const response = await fetch(`${API_BASE}/v1/downloads/${token}`, {
     method: "GET",

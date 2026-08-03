@@ -7,6 +7,7 @@ import {
 } from "../api/client";
 import { Button } from "../components/Button";
 import { ErrorBanner } from "../components/ErrorBanner";
+import { formatFileCount } from "../lib/plural";
 
 type ProjectsPageProps = {
   onCreate: () => void;
@@ -46,6 +47,33 @@ function statusLabel(status: Project["status"]): string {
       return "Ошибка";
     case "EXPIRED":
       return "Истёк";
+    default: {
+      const _exhaustive: never = status;
+      return _exhaustive;
+    }
+  }
+}
+
+function statusChipClass(status: Project["status"]): string {
+  switch (status) {
+    case "DRAFT":
+      return "status-chip status-chip--draft";
+    case "UPLOADING":
+      return "status-chip status-chip--uploading";
+    case "READY_TO_RENDER":
+      return "status-chip status-chip--ready";
+    case "QUEUED":
+      return "status-chip status-chip--queued";
+    case "ANALYZING":
+      return "status-chip status-chip--analyzing";
+    case "RENDERING":
+      return "status-chip status-chip--rendering";
+    case "COMPLETED":
+      return "status-chip status-chip--completed";
+    case "FAILED":
+      return "status-chip status-chip--failed";
+    case "EXPIRED":
+      return "status-chip status-chip--expired";
     default: {
       const _exhaustive: never = status;
       return _exhaustive;
@@ -98,11 +126,16 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
   return (
     <main className="page">
       <header className="page-header">
-        <div>
-          <p className="brand">FADELINE</p>
-          <h1>Мои проекты</h1>
+        <div className="page-header__main">
+          <div className="brand-block">
+            <p className="brand">FADELINE</p>
+            <p className="brand-tagline">Дыши музыкой</p>
+          </div>
+          <h1 className="page-title">Мои проекты</h1>
+          <p className="page-subtitle">
+            Собирайте переходы и миксы из своих аудиофайлов.
+          </p>
         </div>
-        <Button onClick={onCreate}>Новый</Button>
       </header>
 
       {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
@@ -113,11 +146,8 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
         <section className="panel panel--empty">
           <p>Проектов пока нет.</p>
           <p className="muted">
-            Создайте проект с одним эффектом или микс из ваших треков.
+            Создайте микс или обработайте один аудиофайл.
           </p>
-          <Button fullWidth onClick={onCreate}>
-            Создать первый проект
-          </Button>
         </section>
       ) : (
         <ul className="project-cards">
@@ -128,25 +158,50 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
                 className="project-card__open"
                 onClick={() => onOpen(project.id)}
               >
-                <span className="project-card__title">{project.title}</span>
-                <span className="project-card__meta">
-                  {projectTypeLabel(project.type)} · {statusLabel(project.status)}
+                <span
+                  className={
+                    project.type === "MIX"
+                      ? "project-card__mark"
+                      : "project-card__mark project-card__mark--effect"
+                  }
+                  aria-hidden="true"
+                >
+                  {project.type === "MIX" ? "MIX" : "FX"}
                 </span>
-                <span className="project-card__files">
-                  {project.files.length} файл(ов)
+                <span className="project-card__body">
+                  <span className="project-card__title">{project.title}</span>
+                  <span className="project-card__meta-row">
+                    <span className="project-card__type">
+                      {projectTypeLabel(project.type)}
+                    </span>
+                    <span className={statusChipClass(project.status)}>
+                      {statusLabel(project.status)}
+                    </span>
+                  </span>
+                  <span className="project-card__files">
+                    {formatFileCount(project.files.length)}
+                  </span>
                 </span>
               </button>
               <Button
-                variant="danger"
+                variant="icon"
+                className="project-card__delete"
                 disabled={deletingId === project.id}
                 onClick={() => void handleDelete(project.id)}
+                aria-label={`Удалить проект ${project.title}`}
               >
-                Удалить
+                ×
               </Button>
             </li>
           ))}
         </ul>
       )}
+
+      <div className="dock dock--mobile-only">
+        <Button fullWidth onClick={onCreate}>
+          Создать микс
+        </Button>
+      </div>
     </main>
   );
 }

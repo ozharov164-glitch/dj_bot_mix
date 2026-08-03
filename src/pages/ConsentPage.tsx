@@ -44,7 +44,10 @@ export function ConsentPage() {
   return (
     <main className="page">
       <header className="hero">
-        <p className="brand">FADELINE</p>
+        <div className="brand-block">
+          <p className="brand">FADELINE</p>
+          <p className="brand-tagline">Дыши музыкой</p>
+        </div>
         <h1>Согласие перед началом</h1>
         <p className="lead">
           Перед загрузкой файлов подтвердите, что понимаете правила сервиса.

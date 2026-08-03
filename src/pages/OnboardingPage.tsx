@@ -21,7 +21,10 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
   return (
     <main className="page">
       <header className="hero">
-        <p className="brand">FADELINE</p>
+        <div className="brand-block">
+          <p className="brand">FADELINE</p>
+          <p className="brand-tagline">Дыши музыкой</p>
+        </div>
         <h1>Дыши музыкой</h1>
         <p className="lead">
           Соберите офлайн-микс или обработайте один трек — только из файлов,
@@ -40,7 +43,7 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
         </ol>
       </section>
 
-      <section className="panel">
+      <section className="panel panel--raised">
         <h2 className="panel__title">Ограничения</h2>
         <ul className="limits-list">
           <li>До {limits.maxTracksPerProject} треков в одном миксе</li>

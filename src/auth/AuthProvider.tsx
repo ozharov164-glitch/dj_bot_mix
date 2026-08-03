@@ -19,6 +19,10 @@ import {
   type ConsentState,
   type User,
 } from "../api/client";
+import {
+  isLocalCursorPreview,
+  previewAuth,
+} from "../dev/local-preview";
 
 export type AuthStatus =
   | "checking"
@@ -46,7 +50,8 @@ function getInitData(): string {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("checking");
-  const [colorScheme, setColorScheme] = useState<"light" | "dark">("light");
+  // Telegram may report light|dark; UI stays dark-only and ignores this for theming.
+  const [colorScheme, setColorScheme] = useState<"light" | "dark">("dark");
   const [user, setUser] = useState<User | null>(null);
   const [capabilities, setCapabilities] = useState<Capabilities | null>(null);
   const [consent, setConsent] = useState<ConsentState | null>(null);
@@ -54,6 +59,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [attempt, setAttempt] = useState(0);
 
   const authenticate = useCallback(async () => {
+    if (isLocalCursorPreview()) {
+      // DEV-only Cursor design preview: no Telegram, no real token, mock session.
+      setBearerToken(null);
+      setUser(previewAuth.user);
+      setCapabilities(previewAuth.capabilities);
+      setConsent(previewAuth.consent);
+      setError(null);
+      setStatus("ready");
+      return;
+    }
+
     const initData = getInitData();
     if (!initData) {
       setBearerToken(null);
@@ -97,7 +113,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (webApp) {
       webApp.ready();
       webApp.expand();
-      setColorScheme(webApp.colorScheme ?? "light");
+      // Keep Telegram chrome dark even when the client theme is light.
+      try {
+        webApp.setHeaderColor?.("#07090C");
+        webApp.setBackgroundColor?.("#07090C");
+      } catch {
+        // Older Telegram clients may not support these helpers.
+      }
+      setColorScheme(webApp.colorScheme ?? "dark");
     }
 
     void authenticate();

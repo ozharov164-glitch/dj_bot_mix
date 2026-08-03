@@ -1,5 +1,4 @@
 import { LEGAL_DOCS, type LegalDocId } from "../legal/docs";
-import { Button } from "../components/Button";
 
 type LegalPageProps = {
   docId: LegalDocId;
@@ -12,10 +11,15 @@ export function LegalPage({ docId, onBack }: LegalPageProps) {
   return (
     <main className="page">
       <header className="page-header">
-        <Button variant="ghost" onClick={onBack}>
-          ← Назад
-        </Button>
-        <h1>{doc.title}</h1>
+        <div className="page-header__main">
+          <button type="button" className="back-link" onClick={onBack}>
+            <span className="back-link__chevron" aria-hidden="true">
+              ←
+            </span>
+            Назад
+          </button>
+          <h1 className="page-title">{doc.title}</h1>
+        </div>
       </header>
 
       <section className="panel panel--warning" role="status">
