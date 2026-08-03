@@ -112,7 +112,7 @@ describe("ProjectDetailPage render UX", () => {
     expect(
       await screen.findByRole("button", { name: "Обработать" }),
     ).toBeEnabled();
-    expect(screen.getByText(/готов к обработке/i)).toBeInTheDocument();
+    expect(screen.getByText(/Проект готов/i)).toBeInTheDocument();
   });
 
   it("shows queued status copy without download URLs", async () => {
@@ -124,7 +124,7 @@ describe("ProjectDetailPage render UX", () => {
     render(<ProjectDetailPage projectId={baseProject().id} onBack={() => {}} />);
 
     expect(await screen.findByText("В очереди")).toBeInTheDocument();
-    expect(screen.getByText(/Позиция в очереди/i)).toBeInTheDocument();
+    expect(screen.getByText(/Вы в очереди/i)).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(
       /https?:\/\/|\/v1\/downloads|token=/i,
     );
@@ -152,7 +152,7 @@ describe("ProjectDetailPage render UX", () => {
     render(<ProjectDetailPage projectId={baseProject().id} onBack={() => {}} />);
 
     expect(await screen.findByText("Готово")).toBeInTheDocument();
-    expect(screen.getByText(/чат с ботом/i)).toBeInTheDocument();
+    expect(screen.getByText(/в чате с ботом/i)).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /Скачать/i }),
     ).not.toBeInTheDocument();

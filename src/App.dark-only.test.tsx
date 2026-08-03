@@ -49,7 +49,7 @@ describe("App dark-only shell", () => {
     render(<App />);
 
     expect(
-      await screen.findByRole("heading", { name: /Только внутри Telegram/i }),
+      await screen.findByRole("heading", { name: /Откройте в Telegram/i }),
     ).toBeInTheDocument();
 
     const shell = screen.getByTestId("mixflow-shell");

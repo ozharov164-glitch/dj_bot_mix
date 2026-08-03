@@ -17,8 +17,8 @@ type CreateProjectPageProps = {
 };
 
 const EFFECT_LABELS: Record<SingleEffect, string> = {
-  normalise: "Студийная нормализация",
-  speed_pitch: "Темп (без сдвига тона)",
+  normalise: "Студийная громкость",
+  speed_pitch: "Темп без смены тона",
   slow_reverb: "Медленная атмосфера",
   echo: "Эхо-бросок",
   eq: "Клубный EQ",
@@ -32,9 +32,9 @@ const TRANSITION_LABELS: Record<TransitionStyle, string> = {
 };
 
 const TRANSITION_HINTS: Record<TransitionStyle, string> = {
-  safe: "Мягкий equal-power переход с лёгким разведением баса.",
-  smooth: "Один бас за раз — длинный клубный handoff середины и верха.",
-  energetic: "HPF-свип и echo throw — заметный диджейский жест.",
+  safe: "Мягкое слияние; бас не наезжает друг на друга.",
+  smooth: "Один бас в момент; середина и верх плавно меняются.",
+  energetic: "Яркий жест: фильтр и эхо, как в клубе.",
 };
 
 export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps) {
@@ -135,7 +135,7 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
               onChange={() => setType("SINGLE_EFFECT")}
             />
             <span>
-              <strong>Один эффект</strong> — обработка одного файла
+              <strong>Один трек</strong> — эффект на одном файле
             </span>
           </label>
         </fieldset>
@@ -172,8 +172,8 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
               ))}
             </select>
             <span className="field__hint">
-              {TRANSITION_HINTS[transitionStyle]} Без beatmatch: темп и фразы
-              треков не синхронизируются автоматически.
+              {TRANSITION_HINTS[transitionStyle]} Без сведения по биту: треки
+              склеиваются по времени и громкости, не по темпу.
             </span>
           </label>
         )}

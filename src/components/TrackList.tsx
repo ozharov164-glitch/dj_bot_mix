@@ -46,7 +46,7 @@ export function TrackList({
   if (files.length === 0) {
     return (
       <p className="muted empty-hint">
-        Треков пока нет. Загрузите аудиофайлы, на которые у вас есть права.
+        Треков пока нет. Добавьте аудиофайлы, на которые у вас есть права.
       </p>
     );
   }

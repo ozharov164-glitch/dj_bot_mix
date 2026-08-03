@@ -38,8 +38,8 @@ type ProjectDetailPageProps = {
 };
 
 const EFFECT_LABELS: Record<SingleEffect, string> = {
-  normalise: "Студийная нормализация",
-  speed_pitch: "Темп (без сдвига тона)",
+  normalise: "Студийная громкость",
+  speed_pitch: "Темп без смены тона",
   slow_reverb: "Медленная атмосфера",
   echo: "Эхо-бросок",
   eq: "Клубный EQ",
@@ -354,7 +354,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
           </button>
           <h1 className="page-title">{project.title}</h1>
           <p className="muted project-type">
-            {project.type === "SINGLE_EFFECT" ? "Один эффект" : "Микс"}
+            {project.type === "SINGLE_EFFECT" ? "Один трек" : "Микс"}
           </p>
         </div>
       </header>
@@ -382,17 +382,16 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
           </p>
           {renderJob.status === "COMPLETED" && renderJob.result ? (
             <p className="muted">
-              Размер: {formatBytes(renderJob.result.sizeBytes)}. Файл также
-              доступен в чате с ботом.
+              Размер: {formatBytes(renderJob.result.sizeBytes)}.
             </p>
           ) : null}
         </section>
       ) : project.status === "READY_TO_RENDER" ? (
         <section className="panel panel--status panel--success" role="status">
-          <strong>Проект готов к обработке</strong>
+          <strong>Проект готов</strong>
           <p className="muted">
-            Все условия выполнены. Нажмите «Обработать», чтобы поставить задачу
-            в очередь.
+            Нажмите «Обработать» — когда файл будет готов, пришлём его сюда же,
+            в чат с ботом FADELINE. Можно закрыть приложение и подождать.
           </p>
         </section>
       ) : null}
@@ -402,8 +401,8 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
         <div className="panel panel--raised">
           <p className="muted">
             {project.type === "SINGLE_EFFECT"
-              ? "Загрузите один аудиофайл."
-              : `Загрузите от 2 до ${maxTracks} треков для микса.`}
+              ? "Загрузите один аудиофайл, на который у вас есть права."
+              : `Загрузите от 2 до ${maxTracks} треков для микса — только файлы, на которые у вас есть права.`}
           </p>
           <input
             ref={fileInputRef}
@@ -486,8 +485,8 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
                 ))}
               </select>
               <span className="field__hint">
-                Клубный бленд / бас-свап / фильтр-свип. Без beatmatch: темп и
-                фразы не синхронизируются автоматически.
+                Клубный бленд / бас-свап / фильтр-свип. Без сведения по биту:
+                треки склеиваются по времени и громкости, не по темпу.
               </span>
             </label>
           )}

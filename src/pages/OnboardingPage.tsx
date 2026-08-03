@@ -25,21 +25,22 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
           <p className="brand">FADELINE</p>
           <p className="brand-tagline">Дыши музыкой</p>
         </div>
-        <h1>Дыши музыкой</h1>
+        <h1>Ваши треки. Ваш микс.</h1>
         <p className="lead">
-          Соберите офлайн-микс или обработайте один трек — только из файлов,
-          которые вы загружаете сами. Мы не предоставляем каталог музыки и не
-          используем ИИ для генерации звука.
+          Загружаете файлы сами — мы не даём каталог музыки и не генерируем звук
+          нейросетью. Только ваша музыка, аккуратно собранная в один файл.
         </p>
       </header>
 
       <section className="panel">
         <h2 className="panel__title">Как это работает</h2>
         <ol className="steps">
-          <li>Создайте проект: один эффект или микс из нескольких треков.</li>
-          <li>Загрузите аудиофайлы, на которые у вас есть права.</li>
-          <li>Настройте эффект или стиль переходов.</li>
-          <li>Когда проект готов — обработка появится на следующем этапе.</li>
+          <li>Создайте проект: микс или обработка одного трека.</li>
+          <li>Загрузите файлы, на которые у вас есть права.</li>
+          <li>Выберите стиль переходов или эффект.</li>
+          <li>
+            Нажмите «Обработать» — готовый файл придёт в чат с ботом.
+          </li>
         </ol>
       </section>
 
@@ -65,11 +66,7 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
       </section>
 
       <section className="panel">
-        <h2 className="panel__title">Документы (черновики)</h2>
-        <p className="muted">
-          Тексты помечены как черновики и требуют проверки юристом до публичного
-          запуска.
-        </p>
+        <h2 className="panel__title">Документы</h2>
         <ul className="limits-list">
           <li>
             <button
@@ -111,7 +108,7 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
       </section>
 
       <Button fullWidth onClick={onContinue}>
-        Понятно, к проектам
+        Начать
       </Button>
     </main>
   );

@@ -17,7 +17,7 @@ type ProjectsPageProps = {
 function projectTypeLabel(type: Project["type"]): string {
   switch (type) {
     case "SINGLE_EFFECT":
-      return "Один эффект";
+      return "Один трек";
     case "MIX":
       return "Микс";
     default: {
@@ -133,7 +133,7 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
           </div>
           <h1 className="page-title">Мои проекты</h1>
           <p className="page-subtitle">
-            Собирайте переходы и миксы из своих аудиофайлов.
+            Миксы и эффекты из ваших файлов.
           </p>
         </div>
       </header>
@@ -144,9 +144,9 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
         <p className="muted">Загрузка проектов…</p>
       ) : projects.length === 0 ? (
         <section className="panel panel--empty">
-          <p>Проектов пока нет.</p>
+          <p>Ещё пусто — самое время собрать первый микс.</p>
           <p className="muted">
-            Создайте микс или обработайте один аудиофайл.
+            Или обработайте один трек: нормализация, атмосфера, бас.
           </p>
         </section>
       ) : (
@@ -199,7 +199,7 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
 
       <div className="dock dock--mobile-only">
         <Button fullWidth onClick={onCreate}>
-          Создать микс
+          Новый проект
         </Button>
       </div>
     </main>

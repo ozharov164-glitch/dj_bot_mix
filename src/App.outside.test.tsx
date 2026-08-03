@@ -38,7 +38,7 @@ describe("App outside Telegram", () => {
     render(<App />);
 
     expect(
-      await screen.findByRole("heading", { name: /Только внутри Telegram/i }),
+      await screen.findByRole("heading", { name: /Откройте в Telegram/i }),
     ).toBeInTheDocument();
     expect(api.authTelegram).not.toHaveBeenCalled();
     expect(api.getBearerToken()).toBeNull();
@@ -59,7 +59,7 @@ describe("App outside Telegram", () => {
     render(<App />);
 
     expect(
-      await screen.findByRole("heading", { name: /Только внутри Telegram/i }),
+      await screen.findByRole("heading", { name: /Откройте в Telegram/i }),
     ).toBeInTheDocument();
     expect(api.authTelegram).not.toHaveBeenCalled();
     expect(api.getBearerToken()).toBeNull();
