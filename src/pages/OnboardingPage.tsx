@@ -13,6 +13,7 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
   const { capabilities } = useAuth();
   const limits = capabilities?.limits ?? PUBLIC_LIMITS;
   const [legalDoc, setLegalDoc] = useState<LegalDocId | null>(null);
+  const maxMb = Math.round(limits.maxFileSizeBytes / (1024 * 1024));
 
   if (legalDoc) {
     return <LegalPage docId={legalDoc} onBack={() => setLegalDoc(null)} />;
@@ -20,37 +21,59 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
 
   return (
     <main className="page">
-      <header className="hero">
+      <header className="hero hero--centered">
         <div className="brand-block">
           <p className="brand">FADELINE</p>
           <p className="brand-tagline">Дыши музыкой</p>
         </div>
-        <h1>Ваши треки. Ваш микс.</h1>
+        <h1>
+          Ваши треки.
+          <br />
+          Ваш микс.
+        </h1>
         <p className="lead">
-          Загружаете файлы сами — мы не даём каталог музыки и не генерируем звук
-          нейросетью. Только ваша музыка, аккуратно собранная в один файл.
+          Только ваши файлы. Без каталога музыки и без ИИ-генерации звука.
         </p>
       </header>
 
-      <section className="panel">
-        <h2 className="panel__title">Как это работает</h2>
-        <ol className="steps">
-          <li>Создайте проект: микс или обработка одного трека.</li>
-          <li>Загрузите файлы, на которые у вас есть права.</li>
-          <li>Выберите стиль переходов или эффект.</li>
-          <li>
-            Нажмите «Обработать» — готовый файл придёт в чат с ботом.
+      <section className="panel panel--raised">
+        <ol className="timeline">
+          <li className="timeline__item">
+            <span className="timeline__n">1</span>
+            <div className="timeline__body">
+              <h3>Создайте проект</h3>
+              <p>Микс из нескольких треков или обработка одного файла.</p>
+            </div>
+          </li>
+          <li className="timeline__item">
+            <span className="timeline__n">2</span>
+            <div className="timeline__body">
+              <h3>Загрузите файлы</h3>
+              <p>Только аудио, на которое у вас есть права.</p>
+            </div>
+          </li>
+          <li className="timeline__item">
+            <span className="timeline__n">3</span>
+            <div className="timeline__body">
+              <h3>Выберите стиль или эффект</h3>
+              <p>Переходы для микса или обработка одного трека.</p>
+            </div>
+          </li>
+          <li className="timeline__item timeline__item--accent">
+            <span className="timeline__n">4</span>
+            <div className="timeline__body">
+              <h3>Обработать</h3>
+              <p>Готовый файл придёт прямо в чат с ботом.</p>
+            </div>
           </li>
         </ol>
       </section>
 
-      <section className="panel panel--raised">
+      <section className="panel">
         <h2 className="panel__title">Ограничения</h2>
         <ul className="limits-list">
           <li>До {limits.maxTracksPerProject} треков в одном миксе</li>
-          <li>
-            Файл до {Math.round(limits.maxFileSizeBytes / (1024 * 1024))} МБ
-          </li>
+          <li>Файл до {maxMb} МБ</li>
           <li>
             Суммарный размер проекта до{" "}
             {Math.round(limits.maxProjectSizeBytes / (1024 * 1024))} МБ
@@ -60,9 +83,6 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
             {Math.round(limits.maxOutputDurationSeconds / 60)} мин
           </li>
         </ul>
-        <p className="muted fine-print">
-          Точные лимиты определяет сервер. Здесь — ориентир для интерфейса.
-        </p>
       </section>
 
       <section className="panel">
@@ -107,8 +127,9 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
         </ul>
       </section>
 
+      <p className="limits-rule">Файл до {maxMb} МБ</p>
       <Button fullWidth onClick={onContinue}>
-        Начать
+        Начать →
       </Button>
     </main>
   );

@@ -114,29 +114,33 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
           />
         </label>
 
-        <fieldset className="field">
+        <fieldset className="field type-options">
           <legend className="field__label">Тип проекта</legend>
-          <label className="radio-row">
+          <label className="type-option">
             <input
               type="radio"
               name="project-type"
               checked={type === "MIX"}
               onChange={() => setType("MIX")}
             />
-            <span>
-              <strong>Микс</strong> — несколько треков с переходами
+            <span className="type-option__copy">
+              <strong>Микс</strong>
+              <span>Несколько треков с переходами</span>
             </span>
+            <span className="type-option__mark" aria-hidden="true" />
           </label>
-          <label className="radio-row">
+          <label className="type-option">
             <input
               type="radio"
               name="project-type"
               checked={type === "SINGLE_EFFECT"}
               onChange={() => setType("SINGLE_EFFECT")}
             />
-            <span>
-              <strong>Один трек</strong> — эффект на одном файле
+            <span className="type-option__copy">
+              <strong>Один трек</strong>
+              <span>Эффект на одном файле</span>
             </span>
+            <span className="type-option__mark" aria-hidden="true" />
           </label>
         </fieldset>
 
@@ -199,7 +203,7 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
         disabled={submitting}
         onClick={() => void handleSubmit()}
       >
-        {submitting ? "Создание…" : "Создать проект"}
+        {submitting ? "Создание…" : "Создать проект +"}
       </Button>
     </main>
   );

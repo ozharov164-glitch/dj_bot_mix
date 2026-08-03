@@ -144,9 +144,12 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
         <p className="muted">Загрузка проектов…</p>
       ) : projects.length === 0 ? (
         <section className="panel panel--empty">
-          <p>Ещё пусто — самое время собрать первый микс.</p>
+          <div className="empty-icon" aria-hidden="true">
+            ♪
+          </div>
+          <p>Ещё пусто — самое время собрать первый микс</p>
           <p className="muted">
-            Или обработайте один трек: нормализация, атмосфера, бас.
+            Или обработайте один трек: громкость, атмосфера, бас.
           </p>
         </section>
       ) : (
@@ -199,7 +202,7 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
 
       <div className="dock dock--mobile-only">
         <Button fullWidth onClick={onCreate}>
-          Новый проект
+          + Новый проект
         </Button>
       </div>
     </main>

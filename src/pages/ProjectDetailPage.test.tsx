@@ -123,8 +123,9 @@ describe("ProjectDetailPage render UX", () => {
 
     render(<ProjectDetailPage projectId={baseProject().id} onBack={() => {}} />);
 
-    expect(await screen.findByText("В очереди")).toBeInTheDocument();
-    expect(screen.getByText(/Вы в очереди/i)).toBeInTheDocument();
+    expect(await screen.findByRole("status")).toBeInTheDocument();
+    expect(screen.getByText("Вы в очереди")).toBeInTheDocument();
+    expect(document.body.textContent).toMatch(/Вы в очереди/i);
     expect(document.body.textContent).not.toMatch(
       /https?:\/\/|\/v1\/downloads|token=/i,
     );
@@ -151,7 +152,7 @@ describe("ProjectDetailPage render UX", () => {
 
     render(<ProjectDetailPage projectId={baseProject().id} onBack={() => {}} />);
 
-    expect(await screen.findByText("Готово")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Готово" })).toBeInTheDocument();
     expect(screen.getByText(/в чате с ботом/i)).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /Скачать/i }),

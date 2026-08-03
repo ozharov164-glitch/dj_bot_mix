@@ -20,6 +20,7 @@ import { Button } from "../components/Button";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { ProgressBar } from "../components/ProgressBar";
 import { TrackList } from "../components/TrackList";
+import { RenderStatusHero } from "../components/RenderStatusHero";
 import {
   buildHtmlAccept,
   projectAfterUploadResponse,
@@ -51,6 +52,33 @@ const TRANSITION_LABELS: Record<TransitionStyle, string> = {
   smooth: "Бас-свап",
   energetic: "Фильтр-свип",
 };
+
+function statusFallback(status: Project["status"]): string {
+  switch (status) {
+    case "DRAFT":
+      return "Черновик";
+    case "UPLOADING":
+      return "Загрузка";
+    case "READY_TO_RENDER":
+      return "Готов к обработке";
+    case "QUEUED":
+      return "В очереди";
+    case "ANALYZING":
+      return "Анализ";
+    case "RENDERING":
+      return "Обработка";
+    case "COMPLETED":
+      return "Готово";
+    case "FAILED":
+      return "Ошибка";
+    case "EXPIRED":
+      return "Истёк";
+    default: {
+      const _exhaustive: never = status;
+      return _exhaustive;
+    }
+  }
+}
 
 const EDITABLE_STATUSES: Project["status"][] = [
   "DRAFT",
@@ -338,6 +366,11 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
   });
   const jobActive =
     renderJob?.status === "QUEUED" || renderJob?.status === "RUNNING";
+  const tracksDimmed =
+    renderJob != null &&
+    (renderJob.status === "QUEUED" ||
+      renderJob.status === "RUNNING" ||
+      renderJob.status === "COMPLETED");
   const renderAvailable =
     (project.type === "SINGLE_EFFECT" && renderFeature) ||
     (project.type === "MIX" && mixRenderFeature);
@@ -353,8 +386,14 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
             Проекты
           </button>
           <h1 className="page-title">{project.title}</h1>
-          <p className="muted project-type">
+          <p className="project-meta">
             {project.type === "SINGLE_EFFECT" ? "Один трек" : "Микс"}
+            {" · "}
+            {renderJob
+              ? renderStatusTitle(renderJob.status)
+              : project.status === "READY_TO_RENDER"
+                ? "Готов к обработке"
+                : statusFallback(project.status)}
           </p>
         </div>
       </header>
@@ -362,41 +401,38 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
       {error ? <ErrorBanner message={error} /> : null}
 
       {renderJob ? (
-        <section
-          className={
-            renderJob.status === "COMPLETED"
-              ? "panel panel--status panel--success"
-              : renderJob.status === "FAILED"
-                ? "panel panel--status panel--danger"
-                : "panel panel--status panel--raised"
+        <RenderStatusHero
+          status={renderJob.status}
+          title={
+            renderJob.status === "RUNNING"
+              ? "Собираем файл"
+              : renderJob.status === "QUEUED"
+                ? "Вы в очереди"
+                : renderJob.status === "COMPLETED"
+                  ? "Готово"
+                  : renderStatusTitle(renderJob.status)
           }
-          role="status"
-          aria-live="polite"
-        >
-          <strong>{renderStatusTitle(renderJob.status)}</strong>
-          <p className="muted">
-            {renderStatusDescription(renderJob.status, {
-              queuePosition: renderJob.queuePosition,
-              errorMessage: renderJob.errorMessage,
-            })}
-          </p>
-          {renderJob.status === "COMPLETED" && renderJob.result ? (
-            <p className="muted">
-              Размер: {formatBytes(renderJob.result.sizeBytes)}.
-            </p>
-          ) : null}
-        </section>
+          description={renderStatusDescription(renderJob.status, {
+            queuePosition: renderJob.queuePosition,
+            errorMessage: renderJob.errorMessage,
+          })}
+          detail={
+            renderJob.status === "COMPLETED" && renderJob.result
+              ? `Размер: ${formatBytes(renderJob.result.sizeBytes)}`
+              : null
+          }
+        />
       ) : project.status === "READY_TO_RENDER" ? (
         <section className="panel panel--status panel--success" role="status">
           <strong>Проект готов</strong>
           <p className="muted">
-            Нажмите «Обработать» — когда файл будет готов, пришлём его сюда же,
-            в чат с ботом FADELINE. Можно закрыть приложение и подождать.
+            Нажмите «Обработать» — готовый файл придёт в чат с ботом. Можно
+            закрыть приложение и подождать.
           </p>
         </section>
       ) : null}
 
-      <section className="section">
+      <section className={`section${tracksDimmed ? " tracks-dimmed" : ""}`}>
         <h2 className="section__title">Треки</h2>
         <div className="panel panel--raised">
           <p className="muted">
@@ -421,7 +457,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
             disabled={!editable || uploadProgress !== null || jobActive}
             onClick={() => fileInputRef.current?.click()}
           >
-            Выбрать файл
+            + Выбрать файл
           </Button>
           {uploadProgress !== null && uploadName ? (
             <ProgressBar
@@ -442,7 +478,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
         </div>
       </section>
 
-      <section className="section">
+      <section className={`section${tracksDimmed ? " tracks-dimmed" : ""}`}>
         <h2 className="section__title">Настройки</h2>
         <div className="panel">
           {project.type === "SINGLE_EFFECT" ? (
