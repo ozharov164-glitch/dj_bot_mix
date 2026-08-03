@@ -39,7 +39,7 @@ export function renderStatusDescription(
     case "RUNNING":
       return "Идёт обработка файла. Обычно это занимает до нескольких минут.";
     case "COMPLETED":
-      return "Результат готов. Скачивание по явному нажатию кнопки ниже.";
+      return "Готовый файл отправлен в чат с ботом FADELINE. Откройте Telegram — результат уже во вложении.";
     case "FAILED":
       return (
         options?.errorMessage ??

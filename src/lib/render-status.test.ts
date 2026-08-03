@@ -31,6 +31,8 @@ describe("render-status helpers", () => {
       });
       expect(text).not.toMatch(/https?:\/\/|\/v1\/downloads|token=/i);
     }
+    expect(renderStatusDescription("COMPLETED")).toMatch(/чат с ботом/i);
+    expect(renderStatusDescription("COMPLETED")).not.toMatch(/Скачивание/i);
   });
 
   it("allows enqueue for SINGLE_EFFECT and MIX when features on", () => {

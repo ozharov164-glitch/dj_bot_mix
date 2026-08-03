@@ -13,7 +13,6 @@ vi.mock("../api/client", async () => {
     getProject: vi.fn(),
     getRenderJob: vi.fn(),
     enqueueRender: vi.fn(),
-    downloadRenderResult: vi.fn(),
     patchProject: vi.fn(),
     uploadProjectFile: vi.fn(),
     reorderProjectFiles: vi.fn(),
@@ -134,7 +133,7 @@ describe("ProjectDetailPage render UX", () => {
     ).toBeDisabled();
   });
 
-  it("shows completed download CTA", async () => {
+  it("shows completed status and bot delivery copy without download CTA", async () => {
     vi.mocked(api.getProject).mockResolvedValue(
       baseProject({ status: "COMPLETED" }),
     );
@@ -153,9 +152,13 @@ describe("ProjectDetailPage render UX", () => {
     render(<ProjectDetailPage projectId={baseProject().id} onBack={() => {}} />);
 
     expect(await screen.findByText("Готово")).toBeInTheDocument();
+    expect(screen.getByText(/чат с ботом/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Скачать результат" }),
-    ).toBeEnabled();
+      screen.queryByRole("button", { name: /Скачать/i }),
+    ).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(
+      /https?:\/\/|\/v1\/downloads|token=/i,
+    );
   });
 
   it("shows safe failed message and allows retry button", async () => {

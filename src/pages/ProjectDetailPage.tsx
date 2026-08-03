@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ApiError,
   deleteProjectFile,
-  downloadRenderResult,
   enqueueRender,
   formatBytes,
   getProject,
@@ -69,7 +68,6 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [rendering, setRendering] = useState(false);
-  const [downloading, setDownloading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [uploadName, setUploadName] = useState<string | null>(null);
 
@@ -305,21 +303,6 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
     }
   }
 
-  async function handleDownload() {
-    if (!renderJob || renderJob.status !== "COMPLETED") return;
-    setDownloading(true);
-    setError(null);
-    try {
-      await downloadRenderResult(renderJob.id);
-    } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Не удалось скачать результат",
-      );
-    } finally {
-      setDownloading(false);
-    }
-  }
-
   if (loading && !project) {
     return (
       <main className="page">
@@ -399,18 +382,9 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
           </p>
           {renderJob.status === "COMPLETED" && renderJob.result ? (
             <p className="muted">
-              Размер: {formatBytes(renderJob.result.sizeBytes)}. Хранится до{" "}
-              {new Date(renderJob.result.expiresAt).toLocaleString("ru-RU")}.
+              Размер: {formatBytes(renderJob.result.sizeBytes)}. Файл также
+              доступен в чате с ботом.
             </p>
-          ) : null}
-          {renderJob.status === "COMPLETED" ? (
-            <Button
-              fullWidth
-              disabled={downloading}
-              onClick={() => void handleDownload()}
-            >
-              {downloading ? "Скачивание…" : "Скачать результат"}
-            </Button>
           ) : null}
         </section>
       ) : project.status === "READY_TO_RENDER" ? (
