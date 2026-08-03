@@ -10,6 +10,10 @@ import {
 import { useAuth } from "../auth/AuthProvider";
 import { Button } from "../components/Button";
 import { ErrorBanner } from "../components/ErrorBanner";
+import {
+  resolveTransitionCatalog,
+  transitionEntry,
+} from "../lib/transition-catalog";
 
 type CreateProjectPageProps = {
   onBack: () => void;
@@ -25,18 +29,6 @@ const EFFECT_LABELS: Record<SingleEffect, string> = {
   bass_boost: "Плотный бас",
 };
 
-const TRANSITION_LABELS: Record<TransitionStyle, string> = {
-  safe: "Клубный бленд",
-  smooth: "Бас-свап",
-  energetic: "Фильтр-свип",
-};
-
-const TRANSITION_HINTS: Record<TransitionStyle, string> = {
-  safe: "Три полосы как на пульте: сначала верх, бас — одним жестом.",
-  smooth: "Долгий обмен серединой; бас щёлкает в один момент.",
-  energetic: "Мощный жест: фильтр закрывается, эхо и рывок громкости.",
-};
-
 export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps) {
   const { capabilities } = useAuth();
   const [title, setTitle] = useState("");
@@ -48,10 +40,9 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
   const [error, setError] = useState<string | null>(null);
 
   const effects = capabilities?.effects ?? (Object.keys(EFFECT_LABELS) as SingleEffect[]);
-  const transitions =
-    capabilities?.transitionStyles ??
-    (Object.keys(TRANSITION_LABELS) as TransitionStyle[]);
+  const transitionCatalog = resolveTransitionCatalog(capabilities);
   const formats = capabilities?.outputFormats ?? (["mp3", "aac"] as OutputFormat[]);
+  const selectedTransition = transitionEntry(transitionCatalog, transitionStyle);
 
   async function handleSubmit() {
     const trimmed = title.trim();
@@ -169,15 +160,17 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
                 setTransitionStyle(e.target.value as TransitionStyle)
               }
             >
-              {transitions.map((style) => (
-                <option key={style} value={style}>
-                  {TRANSITION_LABELS[style]}
+              {transitionCatalog.map((entry) => (
+                <option key={entry.id} value={entry.id}>
+                  {entry.labelRu}
                 </option>
               ))}
             </select>
+            <span className="field__hint field__hint--footnote">
+              {selectedTransition.hintRu}
+            </span>
             <span className="field__hint">
-              {TRANSITION_HINTS[transitionStyle]} Без сведения по биту: треки
-              склеиваются по времени и громкости, не по темпу.
+              Склейка по времени и громкости, не по темпу треков.
             </span>
           </label>
         )}

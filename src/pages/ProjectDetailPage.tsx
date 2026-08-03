@@ -18,6 +18,10 @@ import {
 import { useAuth } from "../auth/AuthProvider";
 import { Button } from "../components/Button";
 import { ErrorBanner } from "../components/ErrorBanner";
+import {
+  resolveTransitionCatalog,
+  transitionEntry,
+} from "../lib/transition-catalog";
 import { ProgressBar } from "../components/ProgressBar";
 import { TrackList } from "../components/TrackList";
 import { RenderStatusHero } from "../components/RenderStatusHero";
@@ -45,12 +49,6 @@ const EFFECT_LABELS: Record<SingleEffect, string> = {
   echo: "Эхо-бросок",
   eq: "Клубный EQ",
   bass_boost: "Плотный бас",
-};
-
-const TRANSITION_LABELS: Record<TransitionStyle, string> = {
-  safe: "Клубный бленд",
-  smooth: "Бас-свап",
-  energetic: "Фильтр-свип",
 };
 
 function statusFallback(status: Project["status"]): string {
@@ -354,9 +352,11 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
   }
 
   const effects = capabilities?.effects ?? (Object.keys(EFFECT_LABELS) as SingleEffect[]);
-  const transitions =
-    capabilities?.transitionStyles ??
-    (Object.keys(TRANSITION_LABELS) as TransitionStyle[]);
+  const transitionCatalog = resolveTransitionCatalog(capabilities);
+  const selectedTransition = transitionEntry(
+    transitionCatalog,
+    project.transitionStyle,
+  );
   const formats = capabilities?.outputFormats ?? (["mp3", "aac"] as OutputFormat[]);
   const canRender = canEnqueueRender({
     projectType: project.type,
@@ -514,15 +514,17 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
                   })
                 }
               >
-                {transitions.map((style) => (
-                  <option key={style} value={style}>
-                    {TRANSITION_LABELS[style]}
+                {transitionCatalog.map((entry) => (
+                  <option key={entry.id} value={entry.id}>
+                    {entry.labelRu}
                   </option>
                 ))}
               </select>
+              <span className="field__hint field__hint--footnote">
+                {selectedTransition.hintRu}
+              </span>
               <span className="field__hint">
-                Клубный бленд / бас-свап / фильтр-свип. Без сведения по биту:
-                треки склеиваются по времени и громкости, не по темпу.
+                Склейка по времени и громкости, не по темпу треков.
               </span>
             </label>
           )}

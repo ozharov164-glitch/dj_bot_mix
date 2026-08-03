@@ -58,7 +58,22 @@ export type SingleEffect =
   | "eq"
   | "bass_boost";
 
-export type TransitionStyle = "safe" | "smooth" | "energetic";
+export type TransitionStyle =
+  | "safe"
+  | "smooth"
+  | "energetic"
+  | "echo_out"
+  | "dark_fade"
+  | "punch"
+  | "variety";
+
+export type TransitionStyleCatalogEntry = {
+  id: TransitionStyle;
+  labelRu: string;
+  hintRu: string;
+  recommended?: boolean;
+};
+
 export type OutputFormat = "mp3" | "aac";
 
 export type AudioFileStatus =
@@ -130,6 +145,8 @@ export type Capabilities = {
   };
   effects: SingleEffect[];
   transitionStyles: TransitionStyle[];
+  /** Preferred: labels + plain-language footnotes from API. */
+  transitionStyleCatalog?: TransitionStyleCatalogEntry[];
   outputFormats: OutputFormat[];
   policyVersion: string;
   features: {
@@ -153,7 +170,7 @@ export type RenderJob = {
   queuePosition: number | null;
   /** Single-effect name, or null for MIX. */
   effect: string | null;
-  transitionStyle: "safe" | "smooth" | "energetic" | null;
+  transitionStyle: TransitionStyle | null;
   trackCount: number | null;
   outputFormat: OutputFormat;
   errorCode: string | null;
