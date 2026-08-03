@@ -40,7 +40,7 @@ type ProjectDetailPageProps = {
 
 const EFFECT_LABELS: Record<SingleEffect, string> = {
   normalise: "Студийная громкость",
-  speed_pitch: "Темп без смены тона",
+  speed_pitch: "Энергичный темп",
   slow_reverb: "Медленная атмосфера",
   echo: "Эхо-бросок",
   eq: "Клубный EQ",

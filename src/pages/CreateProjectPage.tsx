@@ -18,7 +18,7 @@ type CreateProjectPageProps = {
 
 const EFFECT_LABELS: Record<SingleEffect, string> = {
   normalise: "Студийная громкость",
-  speed_pitch: "Темп без смены тона",
+  speed_pitch: "Энергичный темп",
   slow_reverb: "Медленная атмосфера",
   echo: "Эхо-бросок",
   eq: "Клубный EQ",
@@ -32,9 +32,9 @@ const TRANSITION_LABELS: Record<TransitionStyle, string> = {
 };
 
 const TRANSITION_HINTS: Record<TransitionStyle, string> = {
-  safe: "Мягкое слияние; бас не наезжает друг на друга.",
-  smooth: "Один бас в момент; середина и верх плавно меняются.",
-  energetic: "Яркий жест: фильтр и эхо, как в клубе.",
+  safe: "Три полосы как на пульте: сначала верх, бас — одним жестом.",
+  smooth: "Долгий обмен серединой; бас щёлкает в один момент.",
+  energetic: "Мощный жест: фильтр закрывается, эхо и рывок громкости.",
 };
 
 export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps) {
