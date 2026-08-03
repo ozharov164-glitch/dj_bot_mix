@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "../components/Button";
+import { BrandMark } from "../components/BrandMark";
 import { useAuth } from "../auth/AuthProvider";
 import { PUBLIC_LIMITS } from "../config/public-limits";
 import type { LegalDocId } from "../legal/docs";
@@ -22,10 +23,7 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
   return (
     <main className="page">
       <header className="hero hero--centered">
-        <div className="brand-block">
-          <p className="brand">FADELINE</p>
-          <p className="brand-tagline">Дыши музыкой</p>
-        </div>
+        <BrandMark variant="hero" showGlyph={false} />
         <h1>
           Ваши треки.
           <br />

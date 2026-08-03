@@ -6,6 +6,7 @@ import {
   type Project,
 } from "../api/client";
 import { Button } from "../components/Button";
+import { BrandMark } from "../components/BrandMark";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { formatFileCount } from "../lib/plural";
 
@@ -127,10 +128,7 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
     <main className="page">
       <header className="page-header">
         <div className="page-header__main">
-          <div className="brand-block">
-            <p className="brand">FADELINE</p>
-            <p className="brand-tagline">Дыши музыкой</p>
-          </div>
+          <BrandMark variant="row" />
           <h1 className="page-title">Мои проекты</h1>
           <p className="page-subtitle">
             Миксы и эффекты из ваших файлов.
@@ -145,7 +143,26 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
       ) : projects.length === 0 ? (
         <section className="panel panel--empty">
           <div className="empty-icon" aria-hidden="true">
-            ♪
+            <svg viewBox="0 0 48 48" width="28" height="28" fill="none">
+              <path
+                d="M16 14h12a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H16a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4Z"
+                stroke="currentColor"
+                strokeWidth="2"
+              />
+              <path
+                d="M20 22h8M20 27h8M20 32h5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <path
+                d="M30 14v-2a4 4 0 0 1 4-4h0a4 4 0 0 1 4 4v6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <circle cx="36" cy="22" r="3" fill="currentColor" />
+            </svg>
           </div>
           <p>Ещё пусто — самое время собрать первый микс</p>
           <p className="muted">

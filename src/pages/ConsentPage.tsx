@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthProvider";
 import { Button } from "../components/Button";
+import { BrandMark } from "../components/BrandMark";
 import { ErrorBanner } from "../components/ErrorBanner";
 import type { LegalDocId } from "../legal/docs";
 import { LegalPage } from "./LegalPage";
@@ -44,10 +45,7 @@ export function ConsentPage() {
   return (
     <main className="page">
       <header className="hero">
-        <div className="brand-block">
-          <p className="brand">FADELINE</p>
-          <p className="brand-tagline">Дыши музыкой</p>
-        </div>
+        <BrandMark variant="compact" showGlyph={false} />
         <h1>Перед тем как начать</h1>
         <p className="lead">
           Подтвердите согласие с правилами сервиса — и можно собирать микс.

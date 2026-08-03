@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
+import { BrandMark } from "./components/BrandMark";
 import { ErrorBanner } from "./components/ErrorBanner";
 import { isLocalCursorPreview } from "./dev/preview-flag";
 import { ConsentPage } from "./pages/ConsentPage";
@@ -52,10 +53,7 @@ function AppShell() {
       <div className={SHELL_CLASS} data-testid="mixflow-shell">
         <main className="page">
           <header className="hero">
-            <div className="brand-block">
-              <p className="brand">FADELINE</p>
-              <p className="brand-tagline">Дыши музыкой</p>
-            </div>
+            <BrandMark variant="compact" />
             <h1>Ошибка входа</h1>
           </header>
           <ErrorBanner message={error ?? "Неизвестная ошибка"} onRetry={retry} />

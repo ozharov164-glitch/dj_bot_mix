@@ -1,11 +1,10 @@
+import { BrandMark } from "../components/BrandMark";
+
 export function OutsideTelegramPage() {
   return (
     <main className="page">
       <header className="hero">
-        <div className="brand-block">
-          <p className="brand">FADELINE</p>
-          <p className="brand-tagline">Дыши музыкой</p>
-        </div>
+        <BrandMark variant="hero" />
         <h1>Откройте в Telegram</h1>
         <p className="lead">
           FADELINE работает только из чата с ботом — так мы знаем, что это именно

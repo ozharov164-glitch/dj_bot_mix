@@ -22,11 +22,20 @@ export function RenderStatusHero({
 
   return (
     <section
-      className={`render-hero${isFailed ? " render-hero--danger" : ""}${isDone ? " render-hero--success" : ""}`}
+      className={[
+        "render-hero",
+        isFailed ? "render-hero--danger" : "",
+        isDone ? "render-hero--success" : "",
+        isRunning ? "render-hero--running" : "",
+        isQueued ? "render-hero--queued" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       role="status"
       aria-live="polite"
     >
-      <div className="render-hero__glow" aria-hidden="true" />
+      <div className="render-hero__glow render-hero__glow--a" aria-hidden="true" />
+      <div className="render-hero__glow render-hero__glow--b" aria-hidden="true" />
       <div className="render-hero__card">
         <div className="render-hero__mark" aria-hidden="true">
           {isRunning ? (
@@ -52,9 +61,64 @@ export function RenderStatusHero({
             </>
           ) : null}
 
-          {isQueued ? <span className="render-hero__spinner" /> : null}
+          {isQueued ? (
+            <span className="render-hero__queue">
+              <svg
+                className="render-hero__queue-ring render-hero__queue-ring--outer"
+                viewBox="0 0 100 100"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="46"
+                  stroke="currentColor"
+                  strokeDasharray="80 200"
+                  strokeLinecap="round"
+                  strokeWidth="2"
+                />
+              </svg>
+              <svg
+                className="render-hero__queue-ring render-hero__queue-ring--inner"
+                viewBox="0 0 100 100"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="46"
+                  stroke="currentColor"
+                  strokeDasharray="140 140"
+                  strokeLinecap="round"
+                  strokeWidth="3"
+                />
+              </svg>
+              <span className="render-hero__queue-dot" />
+            </span>
+          ) : null}
 
-          {isDone ? <span className="render-hero__check">✓</span> : null}
+          {isDone ? (
+            <span className="render-hero__check-wrap">
+              <span className="render-hero__check-pulse" />
+              <svg
+                className="render-hero__check-svg"
+                viewBox="0 0 48 48"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle cx="24" cy="24" r="20" className="render-hero__check-ring" />
+                <path
+                  className="render-hero__check-path"
+                  d="M14 25.5 21 32.5 34 17"
+                  strokeWidth="3.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          ) : null}
 
           {isFailed ? <span className="render-hero__fail">!</span> : null}
         </div>
