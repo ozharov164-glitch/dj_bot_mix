@@ -15,6 +15,7 @@ import type {
 } from "../api/client";
 import { ApiError } from "../api/client";
 import { PUBLIC_LIMITS } from "../config/public-limits";
+import { TRANSITION_STYLE_FALLBACK } from "../lib/transition-catalog";
 import { isLocalCursorPreview } from "./preview-flag";
 
 export { isLocalCursorPreview };
@@ -53,49 +54,7 @@ export const PREVIEW_CAPABILITIES: Capabilities = {
     "dark_fade",
     "punch",
   ],
-  transitionStyleCatalog: [
-    {
-      id: "variety",
-      labelRu: "Рекомендуем · Разные переходы",
-      hintRu:
-        "На каждом стыке другой приём — микс не звучит одинаково. Живее, чем одна склейка на весь проект.",
-      recommended: true,
-    },
-    {
-      id: "safe",
-      labelRu: "Клубный бленд",
-      hintRu:
-        "Треки мягко сливаются: сначала слышны верха нового, бас меняется в конце.",
-    },
-    {
-      id: "smooth",
-      labelRu: "Смена баса",
-      hintRu:
-        "Долго слышны оба трека сверху; низкий гул переключается одним жестом.",
-    },
-    {
-      id: "energetic",
-      labelRu: "Фильтр-свип",
-      hintRu:
-        "Старый трек «сжимается» в тонкий звук, новый раскрывается из него.",
-    },
-    {
-      id: "echo_out",
-      labelRu: "Эхо-уход",
-      hintRu: "Старый уходит с повторами, новый входит под это эхо.",
-    },
-    {
-      id: "dark_fade",
-      labelRu: "Тёмный уход",
-      hintRu:
-        "Старый становится глуше и темнее, новый проявляется из тишины.",
-    },
-    {
-      id: "punch",
-      labelRu: "Жёсткий стык",
-      hintRu: "Короткий уверенный переход без долгого наложения.",
-    },
-  ],
+  transitionStyleCatalog: TRANSITION_STYLE_FALLBACK,
   outputFormats: ["mp3", "aac"],
   policyVersion: "preview-local",
   features: {

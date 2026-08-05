@@ -10,6 +10,7 @@ import {
 import { useAuth } from "../auth/AuthProvider";
 import { Button } from "../components/Button";
 import { ErrorBanner } from "../components/ErrorBanner";
+import { EFFECT_LABELS } from "../lib/effect-catalog";
 import {
   resolveTransitionCatalog,
   transitionEntry,
@@ -18,15 +19,6 @@ import {
 type CreateProjectPageProps = {
   onBack: () => void;
   onCreated: (projectId: string) => void;
-};
-
-const EFFECT_LABELS: Record<SingleEffect, string> = {
-  normalise: "Студийная громкость",
-  speed_pitch: "Энергичный темп",
-  slow_reverb: "Медленная атмосфера",
-  echo: "Эхо-бросок",
-  eq: "Клубный EQ",
-  bass_boost: "Плотный бас",
 };
 
 export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps) {
