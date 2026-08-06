@@ -10,7 +10,7 @@ import {
 import { useAuth } from "../auth/AuthProvider";
 import { Button } from "../components/Button";
 import { ErrorBanner } from "../components/ErrorBanner";
-import { EFFECT_LABELS } from "../lib/effect-catalog";
+import { EFFECT_HINTS, EFFECT_LABELS } from "../lib/effect-catalog";
 import {
   resolveTransitionCatalog,
   transitionEntry,
@@ -141,6 +141,9 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
                 </option>
               ))}
             </select>
+            <span className="field__hint field__hint--footnote">
+              {EFFECT_HINTS[singleEffect]}
+            </span>
           </label>
         ) : (
           <label className="field">
