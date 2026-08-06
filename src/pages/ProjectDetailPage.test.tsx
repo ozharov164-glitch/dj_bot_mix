@@ -162,6 +162,50 @@ describe("ProjectDetailPage render UX", () => {
     );
   });
 
+  it("allows multi-file picker for MIX projects", async () => {
+    vi.mocked(api.getProject).mockResolvedValue(
+      baseProject({
+        type: "MIX",
+        singleEffect: null,
+        status: "DRAFT",
+        files: [],
+      }),
+    );
+    vi.mocked(api.getRenderJob).mockRejectedValue(
+      new api.ApiError("PROJECT_NOT_FOUND", "Проект не найден"),
+    );
+
+    render(<ProjectDetailPage projectId={baseProject().id} onBack={() => {}} />);
+
+    expect(
+      await screen.findByRole("button", { name: "+ Выбрать файлы" }),
+    ).toBeInTheDocument();
+    const input = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input?.multiple).toBe(true);
+  });
+
+  it("keeps single-file picker for SINGLE_EFFECT", async () => {
+    vi.mocked(api.getProject).mockResolvedValue(
+      baseProject({ status: "DRAFT", files: [] }),
+    );
+    vi.mocked(api.getRenderJob).mockRejectedValue(
+      new api.ApiError("PROJECT_NOT_FOUND", "Проект не найден"),
+    );
+
+    render(<ProjectDetailPage projectId={baseProject().id} onBack={() => {}} />);
+
+    expect(
+      await screen.findByRole("button", { name: "+ Выбрать файл" }),
+    ).toBeInTheDocument();
+    const input = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement | null;
+    expect(input?.multiple).toBe(false);
+  });
+
   it("shows safe failed message and allows retry button", async () => {
     vi.mocked(api.getProject).mockResolvedValue(
       baseProject({ status: "FAILED" }),

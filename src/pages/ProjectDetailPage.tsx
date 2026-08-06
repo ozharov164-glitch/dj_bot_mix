@@ -26,10 +26,10 @@ import {
 import { ProgressBar } from "../components/ProgressBar";
 import { TrackList } from "../components/TrackList";
 import { RenderStatusHero } from "../components/RenderStatusHero";
+import { planClientUploads } from "../lib/batch-upload";
 import {
   buildHtmlAccept,
   projectAfterUploadResponse,
-  validateClientUploadFilename,
 } from "../lib/file-accept";
 import {
   canEnqueueRender,
@@ -91,6 +91,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
 
   const limits = capabilities?.limits;
   const maxFileBytes = limits?.maxFileSizeBytes;
+  const maxProjectBytes = limits?.maxProjectSizeBytes;
   const maxTracks = limits?.maxTracksPerProject ?? 15;
   const renderFeature = capabilities?.features.render === true;
   const mixRenderFeature = capabilities?.features.mixRender === true;
@@ -207,43 +208,61 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
     }
   }
 
-  async function handleUpload(file: File) {
-    if (!project || !editable) return;
+  async function handleUploadFiles(fileList: FileList | null) {
+    if (!project || !editable || !fileList || fileList.length === 0) return;
 
-    if (maxFileBytes && file.size > maxFileBytes) {
-      setError(
-        `Файл слишком большой (макс. ${formatBytes(maxFileBytes)})`,
-      );
+    const currentProjectBytes = project.files.reduce(
+      (sum, file) => sum + file.sizeBytes,
+      0,
+    );
+    const plan = planClientUploads({
+      selected: Array.from(fileList),
+      projectType: project.type,
+      currentTrackCount: project.files.length,
+      maxTracks,
+      maxFileBytes,
+      currentProjectBytes,
+      maxProjectBytes,
+      allowedExtensions,
+      formatBytes,
+    });
+
+    if (!plan.ok) {
+      setError(plan.message);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
-    const check = validateClientUploadFilename(file.name, allowedExtensions);
-    if (!check.ok) {
-      setError(check.message);
-      return;
-    }
-
-    if (project.files.length >= maxTracks) {
-      setError(`Достигнут лимит: ${maxTracks} треков`);
-      return;
-    }
-
-    if (project.type === "SINGLE_EFFECT" && project.files.length >= 1) {
-      setError("Для проекта с одним эффектом нужен только один файл");
-      return;
-    }
-
-    setUploadName(file.name);
-    setUploadProgress(0);
     setError(null);
+    let latest: Project = project;
 
     try {
-      const uploaded = await uploadProjectFile(
-        project.id,
-        file,
-        setUploadProgress,
-      );
-      setProject(projectAfterUploadResponse(uploaded) as Project);
+      for (let index = 0; index < plan.files.length; index += 1) {
+        const file = plan.files[index]!;
+        const ordinal = index + 1;
+        const total = plan.files.length;
+        setUploadName(
+          total > 1
+            ? `${ordinal}/${total} · ${file.name}`
+            : file.name,
+        );
+        setUploadProgress(Math.round((index / total) * 100));
+
+        const uploaded = await uploadProjectFile(
+          latest.id,
+          file,
+          (fileProgress) => {
+            const overall = ((index + fileProgress / 100) / total) * 100;
+            setUploadProgress(Math.round(overall));
+          },
+        );
+        latest = projectAfterUploadResponse(uploaded) as Project;
+        setProject(latest);
+      }
+
+      if (plan.warnings.length > 0) {
+        setError(plan.warnings.join(" · "));
+      }
     } catch (err) {
       setError(
         err instanceof ApiError ? err.message : "Не удалось загрузить файл",
@@ -430,17 +449,17 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
           <p className="muted">
             {project.type === "SINGLE_EFFECT"
               ? "Загрузите один аудиофайл, на который у вас есть права."
-              : `Загрузите от 2 до ${maxTracks} треков для микса — только файлы, на которые у вас есть права.`}
+              : `Можно выбрать сразу несколько файлов — до ${maxTracks} треков в миксе. Только файлы, на которые у вас есть права.`}
           </p>
           <input
             ref={fileInputRef}
             type="file"
             accept={acceptAttr}
+            multiple={project.type === "MIX"}
             className="file-input"
             disabled={!editable || uploadProgress !== null || jobActive}
             onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void handleUpload(file);
+              void handleUploadFiles(e.target.files);
             }}
           />
           <Button
@@ -449,7 +468,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
             disabled={!editable || uploadProgress !== null || jobActive}
             onClick={() => fileInputRef.current?.click()}
           >
-            + Выбрать файл
+            {project.type === "MIX" ? "+ Выбрать файлы" : "+ Выбрать файл"}
           </Button>
           {uploadProgress !== null && uploadName ? (
             <ProgressBar
