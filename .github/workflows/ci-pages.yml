@@ -45,7 +45,7 @@ jobs:
       - name: Build production Pages artifact
         id: pages_build
         if: >-
-          github.event_name == 'push' &&
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
           (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
           vars.ENABLE_PAGES_DEPLOY == 'true' &&
           vars.VITE_API_URL != ''
@@ -61,7 +61,7 @@ jobs:
 
   deploy:
     if: >-
-      github.event_name == 'push' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
       vars.ENABLE_PAGES_DEPLOY == 'true' &&
       vars.VITE_API_URL != ''
