@@ -413,68 +413,86 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
     (project.type === "SINGLE_EFFECT" && renderFeature) ||
     (project.type === "MIX" && mixRenderFeature);
 
+  const effectOrTransitionLabel =
+    project.type === "SINGLE_EFFECT"
+      ? EFFECT_LABELS[(project.singleEffect ?? "normalise") as SingleEffect]
+      : selectedTransition.labelRu;
+  const typeLabel = project.type === "SINGLE_EFFECT" ? "Один трек" : "Микс";
+  const styleLabel =
+    project.type === "SINGLE_EFFECT" ? "Эффект" : "Переходы";
+
   const stageCards: StageCard[] = [
     {
-      id: "tracks",
-      title: "Треки в проекте",
-      body: (
-        <ul className="stage-summary">
-          {project.files.length === 0 ? (
-            <li>Файлы ещё не добавлены</li>
-          ) : (
-            project.files.map((file, i) => (
-              <li key={file.id}>
-                <span className="stage-summary__n">{i + 1}</span>
-                <span className="stage-summary__name">{file.originalFilename}</span>
-              </li>
-            ))
-          )}
-        </ul>
-      ),
-    },
-    {
       id: "settings",
-      title: "Настройки",
+      title: "Как собираем",
       body: (
-        <div className="stage-kv">
-          <p>
-            <span>Тип</span>
-            <strong>
-              {project.type === "SINGLE_EFFECT" ? "Один трек" : "Микс"}
-            </strong>
-          </p>
-          <p>
-            <span>
-              {project.type === "SINGLE_EFFECT" ? "Эффект" : "Переходы"}
-            </span>
-            <strong>
-              {project.type === "SINGLE_EFFECT"
-                ? EFFECT_LABELS[
-                    (project.singleEffect ?? "normalise") as SingleEffect
-                  ]
-                : selectedTransition.labelRu}
-            </strong>
-          </p>
-          <p>
-            <span>Формат</span>
-            <strong>{project.outputFormat.toUpperCase()}</strong>
-          </p>
-          <p>
-            <span>Файлы</span>
-            <strong>{formatFileCount(project.files.length)}</strong>
+        <div className="stage-recipe">
+          <div className="stage-recipe__hero">
+            <span className="stage-recipe__kicker">{styleLabel}</span>
+            <strong className="stage-recipe__value">{effectOrTransitionLabel}</strong>
+          </div>
+          <div className="stage-recipe__grid">
+            <div className="stage-recipe__tile">
+              <span className="stage-recipe__kicker">Тип</span>
+              <strong>{typeLabel}</strong>
+            </div>
+            <div className="stage-recipe__tile">
+              <span className="stage-recipe__kicker">Формат</span>
+              <strong>{project.outputFormat.toUpperCase()}</strong>
+            </div>
+          </div>
+          <p className="stage-recipe__foot">
+            {formatFileCount(project.files.length)} в проекте
           </p>
         </div>
       ),
     },
     {
-      id: "delivery",
-      title: "Доставка",
+      id: "tracks",
+      title: "Треки",
       body: (
-        <p className="stage-copy">
-          {renderJob?.status === "COMPLETED"
-            ? "Готовый файл уже в чате с ботом — откройте вложение."
-            : "Когда сборка закончится, файл придёт прямо в чат с ботом. Можно закрыть приложение и подождать."}
-        </p>
+        <div className="stage-tracks">
+          <p className="stage-tracks__count">
+            {project.files.length === 0
+              ? "Пока пусто"
+              : formatFileCount(project.files.length)}
+          </p>
+          {project.files.length === 0 ? (
+            <p className="stage-tracks__empty">Файлы ещё не добавлены</p>
+          ) : (
+            <ul className="stage-summary">
+              {project.files.map((file, i) => (
+                <li key={file.id}>
+                  <span className="stage-summary__n">{i + 1}</span>
+                  <span className="stage-summary__name">
+                    {file.originalFilename}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: "delivery",
+      title: "Куда придёт",
+      body: (
+        <div className="stage-delivery">
+          <span className="stage-delivery__mark" aria-hidden="true">
+            <IconSpark size={22} />
+          </span>
+          <strong className="stage-delivery__title">
+            {renderJob?.status === "COMPLETED"
+              ? "Уже в чате с ботом"
+              : "Придёт в чат с ботом"}
+          </strong>
+          <p className="stage-delivery__copy">
+            {renderJob?.status === "COMPLETED"
+              ? "Откройте вложение в переписке — скачивать из приложения не нужно."
+              : "Можно закрыть приложение и подождать. Готовый файл появится во вложении."}
+          </p>
+        </div>
       ),
     },
   ];
