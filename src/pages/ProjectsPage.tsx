@@ -8,7 +8,16 @@ import {
 import { Button } from "../components/Button";
 import { BrandMark } from "../components/BrandMark";
 import { ErrorBanner } from "../components/ErrorBanner";
+import {
+  IconChevronRight,
+  IconFxMark,
+  IconMixMark,
+  IconPlus,
+  IconTrash,
+} from "../components/icons";
+import { SkeletonList } from "../components/SkeletonList";
 import { formatFileCount } from "../lib/plural";
+import { hapticImpact } from "../lib/telegram";
 
 type ProjectsPageProps = {
   onCreate: () => void;
@@ -115,6 +124,7 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
     try {
       await deleteProject(projectId);
       setProjects((prev) => prev.filter((p) => p.id !== projectId));
+      hapticImpact("medium");
     } catch (err) {
       setError(
         err instanceof ApiError ? err.message : "Не удалось удалить проект",
@@ -126,12 +136,12 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
 
   return (
     <main className="page">
-      <header className="page-header">
+      <header className="page-header page-header--home">
         <div className="page-header__main">
           <BrandMark variant="row" />
           <h1 className="page-title">Мои проекты</h1>
           <p className="page-subtitle">
-            Миксы и эффекты из ваших файлов.
+            Миксы и эффекты из ваших файлов — результат приходит в чат с ботом.
           </p>
         </div>
       </header>
@@ -139,7 +149,7 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
       {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
 
       {loading ? (
-        <p className="muted">Загрузка проектов…</p>
+        <SkeletonList count={3} />
       ) : projects.length === 0 ? (
         <section className="panel panel--empty">
           <div className="empty-icon" aria-hidden="true">
@@ -164,10 +174,21 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
               <circle cx="36" cy="22" r="3" fill="currentColor" />
             </svg>
           </div>
-          <p>Ещё пусто — самое время собрать первый микс</p>
+          <p>Пока пусто — соберите первый микс</p>
           <p className="muted">
             Или обработайте один трек: громкость, атмосфера, бас.
           </p>
+          <Button
+            fullWidth
+            className="empty-cta"
+            onClick={() => {
+              hapticImpact("medium");
+              onCreate();
+            }}
+          >
+            <IconPlus size={18} />
+            Создать проект
+          </Button>
         </section>
       ) : (
         <ul className="project-cards">
@@ -176,7 +197,10 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
               <button
                 type="button"
                 className="project-card__open"
-                onClick={() => onOpen(project.id)}
+                onClick={() => {
+                  hapticImpact("light");
+                  onOpen(project.id);
+                }}
               >
                 <span
                   className={
@@ -186,7 +210,11 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
                   }
                   aria-hidden="true"
                 >
-                  {project.type === "MIX" ? "MIX" : "FX"}
+                  {project.type === "MIX" ? (
+                    <IconMixMark size={20} />
+                  ) : (
+                    <IconFxMark size={20} />
+                  )}
                 </span>
                 <span className="project-card__body">
                   <span className="project-card__title">{project.title}</span>
@@ -203,25 +231,24 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
                   </span>
                 </span>
               </button>
-              <Button
-                variant="icon"
-                className="project-card__delete"
-                disabled={deletingId === project.id}
-                onClick={() => void handleDelete(project.id)}
-                aria-label={`Удалить проект ${project.title}`}
-              >
-                ×
-              </Button>
+              <div className="project-card__tools">
+                <Button
+                  variant="icon"
+                  className="btn--icon-danger"
+                  disabled={deletingId === project.id}
+                  onClick={() => void handleDelete(project.id)}
+                  aria-label={`Удалить проект ${project.title}`}
+                >
+                  <IconTrash size={15} />
+                </Button>
+                <span className="project-card__chevron" aria-hidden="true">
+                  <IconChevronRight size={18} />
+                </span>
+              </div>
             </li>
           ))}
         </ul>
       )}
-
-      <div className="dock dock--mobile-only">
-        <Button fullWidth onClick={onCreate}>
-          + Новый проект
-        </Button>
-      </div>
     </main>
   );
 }

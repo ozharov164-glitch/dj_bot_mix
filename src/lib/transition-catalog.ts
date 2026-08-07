@@ -10,7 +10,7 @@ export const TRANSITION_STYLE_FALLBACK: TransitionStyleCatalogEntry[] = [
     id: "variety",
     labelRu: "Рекомендуем · Живой микс",
     hintRu:
-      "На каждом стыке — свой приём. Микс звучит живо, как набор от диджея.",
+      "На каждом стыке — свой приём. Микс звучит живо и разнообразно.",
     recommended: true,
   },
   {

@@ -17,26 +17,32 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthProvider";
 import { Button } from "../components/Button";
+import { CardStage, type StageCard } from "../components/CardStage";
 import { ErrorBanner } from "../components/ErrorBanner";
-import { EFFECT_HINTS, EFFECT_LABELS } from "../lib/effect-catalog";
-import {
-  resolveTransitionCatalog,
-  transitionEntry,
-} from "../lib/transition-catalog";
+import { FlowBreadcrumb } from "../components/FlowBreadcrumb";
+import { IconArrowLeft, IconSpark, IconUpload } from "../components/icons";
+import { OptionPicker } from "../components/OptionPicker";
 import { ProgressBar } from "../components/ProgressBar";
-import { TrackList } from "../components/TrackList";
 import { RenderStatusHero } from "../components/RenderStatusHero";
+import { TrackList } from "../components/TrackList";
 import { planClientUploads } from "../lib/batch-upload";
 import {
   buildHtmlAccept,
   projectAfterUploadResponse,
 } from "../lib/file-accept";
+import { EFFECT_HINTS, EFFECT_LABELS } from "../lib/effect-catalog";
+import { formatFileCount } from "../lib/plural";
 import {
   canEnqueueRender,
   nextRenderPollDelayMs,
   renderStatusDescription,
   renderStatusTitle,
 } from "../lib/render-status";
+import { hapticImpact, hapticNotification } from "../lib/telegram";
+import {
+  resolveTransitionCatalog,
+  transitionEntry,
+} from "../lib/transition-catalog";
 
 type ProjectDetailPageProps = {
   projectId: string;
@@ -331,7 +337,9 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
       setRenderJob(job);
       const refreshed = await getProject(project.id);
       setProject(refreshed);
+      hapticNotification("success");
     } catch (err) {
+      hapticNotification("error");
       setError(
         err instanceof ApiError ? err.message : "Не удалось запустить обработку",
       );
@@ -343,7 +351,9 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
   if (loading && !project) {
     return (
       <main className="page">
-        <p className="muted">Загрузка проекта…</p>
+        <p className="muted loading-inline">Загрузка проекта…</p>
+        <div className="skeleton-block skeleton-shimmer" aria-hidden="true" />
+        <div className="skeleton-block skeleton-block--tall skeleton-shimmer" aria-hidden="true" />
       </main>
     );
   }
@@ -352,15 +362,31 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
     return (
       <main className="page">
         {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
-        <button type="button" className="back-link" onClick={onBack}>
+        <button
+          type="button"
+          className="back-link"
+          onClick={() => {
+            hapticImpact("soft");
+            onBack();
+          }}
+        >
           <span className="back-link__chevron" aria-hidden="true">
-            ←
+            <IconArrowLeft size={16} />
           </span>
           К проектам
         </button>
       </main>
     );
   }
+
+  const filesStepState =
+    project.files.length > 0 ? ("done" as const) : ("current" as const);
+  const renderStepState =
+    renderJob?.status === "COMPLETED"
+      ? ("done" as const)
+      : project.files.length > 0
+        ? ("current" as const)
+        : ("upcoming" as const);
 
   const effects = capabilities?.effects ?? (Object.keys(EFFECT_LABELS) as SingleEffect[]);
   const transitionCatalog = resolveTransitionCatalog(capabilities);
@@ -377,25 +403,109 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
   });
   const jobActive =
     renderJob?.status === "QUEUED" || renderJob?.status === "RUNNING";
-  const tracksDimmed =
+  const renderFocus =
     renderJob != null &&
     (renderJob.status === "QUEUED" ||
       renderJob.status === "RUNNING" ||
-      renderJob.status === "COMPLETED");
+      renderJob.status === "COMPLETED" ||
+      renderJob.status === "FAILED");
   const renderAvailable =
     (project.type === "SINGLE_EFFECT" && renderFeature) ||
     (project.type === "MIX" && mixRenderFeature);
 
+  const stageCards: StageCard[] = [
+    {
+      id: "tracks",
+      title: "Треки в проекте",
+      body: (
+        <ul className="stage-summary">
+          {project.files.length === 0 ? (
+            <li>Файлы ещё не добавлены</li>
+          ) : (
+            project.files.map((file, i) => (
+              <li key={file.id}>
+                <span className="stage-summary__n">{i + 1}</span>
+                <span className="stage-summary__name">{file.originalFilename}</span>
+              </li>
+            ))
+          )}
+        </ul>
+      ),
+    },
+    {
+      id: "settings",
+      title: "Настройки",
+      body: (
+        <div className="stage-kv">
+          <p>
+            <span>Тип</span>
+            <strong>
+              {project.type === "SINGLE_EFFECT" ? "Один трек" : "Микс"}
+            </strong>
+          </p>
+          <p>
+            <span>
+              {project.type === "SINGLE_EFFECT" ? "Эффект" : "Переходы"}
+            </span>
+            <strong>
+              {project.type === "SINGLE_EFFECT"
+                ? EFFECT_LABELS[
+                    (project.singleEffect ?? "normalise") as SingleEffect
+                  ]
+                : selectedTransition.labelRu}
+            </strong>
+          </p>
+          <p>
+            <span>Формат</span>
+            <strong>{project.outputFormat.toUpperCase()}</strong>
+          </p>
+          <p>
+            <span>Файлы</span>
+            <strong>{formatFileCount(project.files.length)}</strong>
+          </p>
+        </div>
+      ),
+    },
+    {
+      id: "delivery",
+      title: "Доставка",
+      body: (
+        <p className="stage-copy">
+          {renderJob?.status === "COMPLETED"
+            ? "Готовый файл уже в чате с ботом — откройте вложение."
+            : "Когда сборка закончится, файл придёт прямо в чат с ботом. Можно закрыть приложение и подождать."}
+        </p>
+      ),
+    },
+  ];
+
   return (
-    <main className="page">
-      <header className="page-header">
+    <main
+      className={`page page--detail${renderFocus ? " page--render-focus" : ""}`}
+    >
+      <header className="page-header page-header--detail">
         <div className="page-header__main">
-          <button type="button" className="back-link" onClick={onBack}>
+          <button
+            type="button"
+            className="back-link"
+            onClick={() => {
+              hapticImpact("soft");
+              onBack();
+            }}
+          >
             <span className="back-link__chevron" aria-hidden="true">
-              ←
+              <IconArrowLeft size={16} />
             </span>
             Проекты
           </button>
+          <FlowBreadcrumb
+            trail={`Проекты → ${project.title}`}
+            steps={[
+              { id: "params", label: "Параметры", state: "done" },
+              { id: "files", label: "Файлы", state: filesStepState },
+              { id: "render", label: "Обработка", state: renderStepState },
+            ]}
+          />
           <h1 className="page-title">{project.title}</h1>
           <p className="project-meta">
             {project.type === "SINGLE_EFFECT" ? "Один трек" : "Микс"}
@@ -411,178 +521,193 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
 
       {error ? <ErrorBanner message={error} /> : null}
 
-      {renderJob ? (
-        <RenderStatusHero
-          status={renderJob.status}
-          title={
-            renderJob.status === "RUNNING"
-              ? "Собираем файл"
-              : renderJob.status === "QUEUED"
-                ? "Вы в очереди"
-                : renderJob.status === "COMPLETED"
-                  ? "Готово"
-                  : renderStatusTitle(renderJob.status)
-          }
-          description={renderStatusDescription(renderJob.status, {
-            queuePosition: renderJob.queuePosition,
-            errorMessage: renderJob.errorMessage,
-          })}
-          detail={
-            renderJob.status === "COMPLETED" && renderJob.result
-              ? `Размер: ${formatBytes(renderJob.result.sizeBytes)}`
-              : null
-          }
-        />
-      ) : project.status === "READY_TO_RENDER" ? (
-        <section className="panel panel--status panel--success" role="status">
-          <strong>Проект готов</strong>
-          <p className="muted">
-            Нажмите «Обработать» — готовый файл придёт в чат с ботом. Можно
-            закрыть приложение и подождать.
-          </p>
-        </section>
-      ) : null}
-
-      <section className={`section${tracksDimmed ? " tracks-dimmed" : ""}`}>
-        <h2 className="section__title">Треки</h2>
-        <div className="panel panel--raised">
-          <p className="muted">
-            {project.type === "SINGLE_EFFECT"
-              ? "Загрузите один аудиофайл, на который у вас есть права."
-              : `Можно выбрать сразу несколько файлов — до ${maxTracks} треков в миксе. Только файлы, на которые у вас есть права.`}
-          </p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={acceptAttr}
-            multiple={project.type === "MIX"}
-            className="file-input"
-            disabled={!editable || uploadProgress !== null || jobActive}
-            onChange={(e) => {
-              void handleUploadFiles(e.target.files);
-            }}
+      {renderFocus && renderJob ? (
+        <div className="detail-focus">
+          <RenderStatusHero
+            status={renderJob.status}
+            title={
+              renderJob.status === "RUNNING"
+                ? "Собираем файл"
+                : renderJob.status === "QUEUED"
+                  ? "Вы в очереди"
+                  : renderJob.status === "COMPLETED"
+                    ? "Готово"
+                    : renderStatusTitle(renderJob.status)
+            }
+            description={renderStatusDescription(renderJob.status, {
+              queuePosition: renderJob.queuePosition,
+              errorMessage: renderJob.errorMessage,
+            })}
+            detail={
+              renderJob.status === "COMPLETED" && renderJob.result
+                ? `Размер: ${formatBytes(renderJob.result.sizeBytes)}`
+                : null
+            }
           />
-          <Button
-            fullWidth
-            variant="secondary"
-            disabled={!editable || uploadProgress !== null || jobActive}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {project.type === "MIX" ? "+ Выбрать файлы" : "+ Выбрать файл"}
-          </Button>
-          {uploadProgress !== null && uploadName ? (
-            <ProgressBar
-              value={uploadProgress}
-              label={`Загрузка: ${uploadName}`}
-            />
+          <CardStage cards={stageCards} autoPlay={jobActive} intervalMs={3200} />
+          {renderJob.status === "FAILED" && renderAvailable ? (
+            <div className="cta-bar cta-bar--symmetric">
+              <Button
+                fullWidth
+                disabled={!canRender || rendering}
+                onClick={() => void handleRender()}
+              >
+                <IconSpark size={18} />
+                Попробовать снова
+              </Button>
+            </div>
           ) : null}
-          <div className="track-list-wrap">
-            <TrackList
-              files={project.files}
-              editable={editable && !jobActive}
-              busy={busy || uploadProgress !== null || jobActive}
-              onMoveUp={(id) => moveFile(id, -1)}
-              onMoveDown={(id) => moveFile(id, 1)}
-              onDelete={(id) => void handleDeleteFile(id)}
-            />
-          </div>
         </div>
-      </section>
+      ) : (
+        <div className="detail-edit">
+          {project.status === "READY_TO_RENDER" ? (
+            <section
+              className="panel panel--status panel--success panel--symmetric"
+              role="status"
+            >
+              <strong>Всё готово к обработке</strong>
+              <p className="muted">
+                Нажмите «Обработать» — готовый файл придёт в чат с ботом. Можно
+                закрыть приложение и подождать.
+              </p>
+            </section>
+          ) : null}
 
-      <section className={`section${tracksDimmed ? " tracks-dimmed" : ""}`}>
-        <h2 className="section__title">Настройки</h2>
-        <div className="panel">
-          {project.type === "SINGLE_EFFECT" ? (
-            <label className="field">
-              <span className="field__label">Эффект</span>
-              <select
-                className="field__input"
-                value={project.singleEffect ?? "normalise"}
+          <section className="section">
+            <h2 className="section__title">Треки</h2>
+            <div className="panel panel--raised">
+              <p className="muted">
+                {project.type === "SINGLE_EFFECT"
+                  ? "Загрузите один аудиофайл, на который у вас есть права."
+                  : `Можно выбрать сразу несколько файлов — до ${maxTracks} треков в миксе. Только файлы, на которые у вас есть права.`}
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={acceptAttr}
+                multiple={project.type === "MIX"}
+                className="file-input"
+                disabled={!editable || uploadProgress !== null || jobActive}
+                onChange={(e) => {
+                  void handleUploadFiles(e.target.files);
+                }}
+              />
+              <Button
+                fullWidth
+                variant="secondary"
+                disabled={!editable || uploadProgress !== null || jobActive}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <IconUpload size={18} />
+                {project.type === "MIX" ? "Выбрать файлы" : "Выбрать файл"}
+              </Button>
+              {uploadProgress !== null && uploadName ? (
+                <ProgressBar
+                  value={uploadProgress}
+                  label={`Загрузка: ${uploadName}`}
+                />
+              ) : null}
+              <div className="track-list-wrap">
+                <TrackList
+                  files={project.files}
+                  editable={editable && !jobActive}
+                  busy={busy || uploadProgress !== null || jobActive}
+                  onMoveUp={(id) => moveFile(id, -1)}
+                  onMoveDown={(id) => moveFile(id, 1)}
+                  onDelete={(id) => void handleDeleteFile(id)}
+                />
+              </div>
+            </div>
+          </section>
+
+          <section className="section">
+            <h2 className="section__title">Настройки</h2>
+            <div className="panel">
+              {project.type === "SINGLE_EFFECT" ? (
+                <OptionPicker
+                  label="Эффект"
+                  value={project.singleEffect ?? "normalise"}
+                  disabled={!editable || busy || jobActive}
+                  options={effects.map((effect) => ({
+                    value: effect,
+                    label: EFFECT_LABELS[effect],
+                    description: EFFECT_HINTS[effect],
+                  }))}
+                  onChange={(next) =>
+                    void handleSettingsChange({
+                      singleEffect: next as SingleEffect,
+                    })
+                  }
+                  footnote={
+                    EFFECT_HINTS[
+                      (project.singleEffect ?? "normalise") as SingleEffect
+                    ]
+                  }
+                />
+              ) : (
+                <OptionPicker
+                  label="Стиль переходов"
+                  value={project.transitionStyle}
+                  disabled={!editable || busy || jobActive}
+                  options={transitionCatalog.map((entry) => ({
+                    value: entry.id,
+                    label: entry.labelRu,
+                    description: entry.hintRu,
+                  }))}
+                  onChange={(next) =>
+                    void handleSettingsChange({
+                      transitionStyle: next as TransitionStyle,
+                    })
+                  }
+                  footnote={selectedTransition.hintRu}
+                  hint="Склейка по времени и громкости, а не по темпу треков."
+                />
+              )}
+
+              <OptionPicker
+                label="Формат результата"
+                value={project.outputFormat}
                 disabled={!editable || busy || jobActive}
-                onChange={(e) =>
+                options={formats.map((format) => ({
+                  value: format,
+                  label: format.toUpperCase(),
+                }))}
+                onChange={(next) =>
                   void handleSettingsChange({
-                    singleEffect: e.target.value as SingleEffect,
+                    outputFormat: next as OutputFormat,
                   })
                 }
-              >
-                {effects.map((effect) => (
-                  <option key={effect} value={effect}>
-                    {EFFECT_LABELS[effect]}
-                  </option>
-                ))}
-              </select>
-              <span className="field__hint field__hint--footnote">
-                {EFFECT_HINTS[(project.singleEffect ?? "normalise") as SingleEffect]}
-              </span>
-            </label>
-          ) : (
-            <label className="field">
-              <span className="field__label">Стиль переходов</span>
-              <select
-                className="field__input"
-                value={project.transitionStyle}
-                disabled={!editable || busy || jobActive}
-                onChange={(e) =>
-                  void handleSettingsChange({
-                    transitionStyle: e.target.value as TransitionStyle,
-                  })
-                }
-              >
-                {transitionCatalog.map((entry) => (
-                  <option key={entry.id} value={entry.id}>
-                    {entry.labelRu}
-                  </option>
-                ))}
-              </select>
-              <span className="field__hint field__hint--footnote">
-                {selectedTransition.hintRu}
-              </span>
-              <span className="field__hint">
-                Склейка по времени и громкости, не по темпу треков.
-              </span>
-            </label>
-          )}
+              />
+            </div>
+          </section>
 
-          <label className="field">
-            <span className="field__label">Формат результата</span>
-            <select
-              className="field__input"
-              value={project.outputFormat}
-              disabled={!editable || busy || jobActive}
-              onChange={(e) =>
-                void handleSettingsChange({
-                  outputFormat: e.target.value as OutputFormat,
-                })
-              }
-            >
-              {formats.map((format) => (
-                <option key={format} value={format}>
-                  {format.toUpperCase()}
-                </option>
-              ))}
-            </select>
-          </label>
+          <section className="section">
+            <h2 className="section__title">Обработка</h2>
+            <div className="cta-bar cta-bar--symmetric">
+              {renderAvailable ? (
+                <Button
+                  fullWidth
+                  disabled={!canRender || rendering || jobActive}
+                  onClick={() => void handleRender()}
+                >
+                  {rendering || jobActive ? (
+                    "Обработка…"
+                  ) : (
+                    <>
+                      <IconSpark size={18} />
+                      Обработать
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button fullWidth disabled title="Обработка пока недоступна">
+                  Обработка недоступна
+                </Button>
+              )}
+            </div>
+          </section>
         </div>
-      </section>
-
-      <section className="section">
-        <h2 className="section__title">Обработка</h2>
-        <div className="cta-bar">
-          {renderAvailable ? (
-            <Button
-              fullWidth
-              disabled={!canRender || rendering || jobActive}
-              onClick={() => void handleRender()}
-            >
-              {rendering || jobActive ? "Обработка…" : "Обработать"}
-            </Button>
-          ) : (
-            <Button fullWidth disabled title="Обработка пока недоступна">
-              Обработка недоступна
-            </Button>
-          )}
-        </div>
-      </section>
+      )}
     </main>
   );
 }

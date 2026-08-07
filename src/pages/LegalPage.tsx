@@ -1,3 +1,4 @@
+import { IconArrowLeft } from "../components/icons";
 import { LEGAL_DOCS, type LegalDocId } from "../legal/docs";
 
 type LegalPageProps = {
@@ -14,7 +15,7 @@ export function LegalPage({ docId, onBack }: LegalPageProps) {
         <div className="page-header__main">
           <button type="button" className="back-link" onClick={onBack}>
             <span className="back-link__chevron" aria-hidden="true">
-              ←
+              <IconArrowLeft size={16} />
             </span>
             Назад
           </button>

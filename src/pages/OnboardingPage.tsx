@@ -3,7 +3,9 @@ import { Button } from "../components/Button";
 import { BrandMark } from "../components/BrandMark";
 import { useAuth } from "../auth/AuthProvider";
 import { PUBLIC_LIMITS } from "../config/public-limits";
+import { hapticImpact } from "../lib/telegram";
 import type { LegalDocId } from "../legal/docs";
+import { IconSpark } from "../components/icons";
 import { LegalPage } from "./LegalPage";
 
 type OnboardingPageProps = {
@@ -30,7 +32,7 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
           Ваш микс.
         </h1>
         <p className="lead">
-          Только ваши файлы. Без каталога музыки и без ИИ-генерации звука.
+          Только ваши файлы. Без каталога музыки и без генерации звука.
         </p>
       </header>
 
@@ -60,8 +62,8 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
           <li className="timeline__item timeline__item--accent">
             <span className="timeline__n">4</span>
             <div className="timeline__body">
-              <h3>Обработать</h3>
-              <p>Готовый файл придёт прямо в чат с ботом.</p>
+              <h3>Получите файл в чате</h3>
+              <p>Готовый результат придёт прямо в чат с ботом FADELINE.</p>
             </div>
           </li>
         </ol>
@@ -125,9 +127,15 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
         </ul>
       </section>
 
-      <p className="limits-rule">Файл до {maxMb} МБ</p>
-      <Button fullWidth onClick={onContinue}>
-        Начать →
+      <Button
+        fullWidth
+        onClick={() => {
+          hapticImpact("medium");
+          onContinue();
+        }}
+      >
+        <IconSpark size={18} />
+        Начать
       </Button>
     </main>
   );

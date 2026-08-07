@@ -10,7 +10,11 @@ import {
 import { useAuth } from "../auth/AuthProvider";
 import { Button } from "../components/Button";
 import { ErrorBanner } from "../components/ErrorBanner";
+import { FlowBreadcrumb } from "../components/FlowBreadcrumb";
+import { OptionPicker } from "../components/OptionPicker";
+import { IconArrowLeft, IconSpark } from "../components/icons";
 import { EFFECT_HINTS, EFFECT_LABELS } from "../lib/effect-catalog";
+import { hapticImpact, hapticNotification } from "../lib/telegram";
 import {
   resolveTransitionCatalog,
   transitionEntry,
@@ -40,6 +44,7 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
     const trimmed = title.trim();
     if (!trimmed) {
       setError("Введите название проекта");
+      hapticNotification("warning");
       return;
     }
 
@@ -54,8 +59,10 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
           ? { singleEffect }
           : { transitionStyle }),
       });
+      hapticNotification("success");
       onCreated(project.id);
     } catch (err) {
+      hapticNotification("error");
       setError(
         err instanceof ApiError
           ? err.message
@@ -70,13 +77,31 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
     <main className="page">
       <header className="page-header">
         <div className="page-header__main">
-          <button type="button" className="back-link" onClick={onBack}>
+          <button
+            type="button"
+            className="back-link"
+            onClick={() => {
+              hapticImpact("soft");
+              onBack();
+            }}
+          >
             <span className="back-link__chevron" aria-hidden="true">
-              ←
+              <IconArrowLeft size={16} />
             </span>
             Проекты
           </button>
+          <FlowBreadcrumb
+            trail="Проекты → Новый проект"
+            steps={[
+              { id: "create", label: "Параметры", state: "current" },
+              { id: "files", label: "Файлы", state: "upcoming" },
+              { id: "render", label: "Обработка", state: "upcoming" },
+            ]}
+          />
           <h1 className="page-title">Новый проект</h1>
+          <p className="page-subtitle">
+            Выберите тип и настройки — файлы добавите на следующем шаге.
+          </p>
         </div>
       </header>
 
@@ -89,7 +114,7 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
             className="field__input"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Например: Тренировка весна 2026"
+            placeholder="Например: Тренировка · весна 2026"
             maxLength={120}
             autoComplete="off"
             autoCorrect="off"
@@ -104,11 +129,14 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
               type="radio"
               name="project-type"
               checked={type === "MIX"}
-              onChange={() => setType("MIX")}
+              onChange={() => {
+                hapticImpact("light");
+                setType("MIX");
+              }}
             />
             <span className="type-option__copy">
               <strong>Микс</strong>
-              <span>Несколько треков с переходами</span>
+              <span>Несколько треков с плавными переходами</span>
             </span>
             <span className="type-option__mark" aria-hidden="true" />
           </label>
@@ -117,82 +145,73 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
               type="radio"
               name="project-type"
               checked={type === "SINGLE_EFFECT"}
-              onChange={() => setType("SINGLE_EFFECT")}
+              onChange={() => {
+                hapticImpact("light");
+                setType("SINGLE_EFFECT");
+              }}
             />
             <span className="type-option__copy">
               <strong>Один трек</strong>
-              <span>Эффект на одном файле</span>
+              <span>Эффект на одном аудиофайле</span>
             </span>
             <span className="type-option__mark" aria-hidden="true" />
           </label>
         </fieldset>
 
         {type === "SINGLE_EFFECT" ? (
-          <label className="field">
-            <span className="field__label">Эффект</span>
-            <select
-              className="field__input"
-              value={singleEffect}
-              onChange={(e) => setSingleEffect(e.target.value as SingleEffect)}
-            >
-              {effects.map((effect) => (
-                <option key={effect} value={effect}>
-                  {EFFECT_LABELS[effect]}
-                </option>
-              ))}
-            </select>
-            <span className="field__hint field__hint--footnote">
-              {EFFECT_HINTS[singleEffect]}
-            </span>
-          </label>
+          <OptionPicker
+            label="Эффект"
+            value={singleEffect}
+            options={effects.map((effect) => ({
+              value: effect,
+              label: EFFECT_LABELS[effect],
+              description: EFFECT_HINTS[effect],
+            }))}
+            onChange={(next) => setSingleEffect(next as SingleEffect)}
+            footnote={EFFECT_HINTS[singleEffect]}
+          />
         ) : (
-          <label className="field">
-            <span className="field__label">Стиль переходов</span>
-            <select
-              className="field__input"
-              value={transitionStyle}
-              onChange={(e) =>
-                setTransitionStyle(e.target.value as TransitionStyle)
-              }
-            >
-              {transitionCatalog.map((entry) => (
-                <option key={entry.id} value={entry.id}>
-                  {entry.labelRu}
-                </option>
-              ))}
-            </select>
-            <span className="field__hint field__hint--footnote">
-              {selectedTransition.hintRu}
-            </span>
-            <span className="field__hint">
-              Склейка по времени и громкости, не по темпу треков.
-            </span>
-          </label>
+          <OptionPicker
+            label="Стиль переходов"
+            value={transitionStyle}
+            options={transitionCatalog.map((entry) => ({
+              value: entry.id,
+              label: entry.labelRu,
+              description: entry.hintRu,
+            }))}
+            onChange={(next) => setTransitionStyle(next as TransitionStyle)}
+            footnote={selectedTransition.hintRu}
+            hint="Склейка по времени и громкости, а не по темпу треков."
+          />
         )}
 
-        <label className="field">
-          <span className="field__label">Формат результата</span>
-          <select
-            className="field__input"
-            value={outputFormat}
-            onChange={(e) => setOutputFormat(e.target.value as OutputFormat)}
-          >
-            {formats.map((format) => (
-              <option key={format} value={format}>
-                {format.toUpperCase()}
-              </option>
-            ))}
-          </select>
-        </label>
+        <OptionPicker
+          label="Формат результата"
+          value={outputFormat}
+          options={formats.map((format) => ({
+            value: format,
+            label: format.toUpperCase(),
+          }))}
+          onChange={(next) => setOutputFormat(next as OutputFormat)}
+        />
       </section>
 
-      <Button
-        fullWidth
-        disabled={submitting}
-        onClick={() => void handleSubmit()}
-      >
-        {submitting ? "Создание…" : "Создать проект +"}
-      </Button>
+      <div className="cta-bar">
+        <Button
+          fullWidth
+          disabled={submitting}
+          onClick={() => void handleSubmit()}
+        >
+          {submitting ? (
+            "Создаём…"
+          ) : (
+            <>
+              <IconSpark size={18} />
+              Создать и добавить файлы
+            </>
+          )}
+        </Button>
+      </div>
     </main>
   );
 }

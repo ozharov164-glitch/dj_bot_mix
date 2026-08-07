@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { hapticImpact } from "../lib/telegram";
 
 type ButtonVariant =
   | "primary"
@@ -21,6 +22,7 @@ export function Button({
   compact = false,
   className = "",
   children,
+  onClick,
   ...props
 }: ButtonProps) {
   const classes = [
@@ -34,7 +36,17 @@ export function Button({
     .join(" ");
 
   return (
-    <button type="button" className={classes} {...props}>
+    <button
+      type="button"
+      className={classes}
+      {...props}
+      onClick={(event) => {
+        if (!props.disabled) {
+          hapticImpact(variant === "primary" ? "medium" : "light");
+        }
+        onClick?.(event);
+      }}
+    >
       {children}
     </button>
   );

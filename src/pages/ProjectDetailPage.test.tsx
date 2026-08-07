@@ -112,7 +112,7 @@ describe("ProjectDetailPage render UX", () => {
     expect(
       await screen.findByRole("button", { name: "Обработать" }),
     ).toBeEnabled();
-    expect(screen.getByText(/Проект готов/i)).toBeInTheDocument();
+    expect(screen.getByText(/Всё готово к обработке/i)).toBeInTheDocument();
   });
 
   it("shows queued status copy without download URLs", async () => {
@@ -130,8 +130,9 @@ describe("ProjectDetailPage render UX", () => {
       /https?:\/\/|\/v1\/downloads|token=/i,
     );
     expect(
-      screen.getByRole("button", { name: "Обработка…" }),
-    ).toBeDisabled();
+      screen.queryByRole("button", { name: "Обработать" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "Карточки" })).toBeInTheDocument();
   });
 
   it("shows completed status and bot delivery copy without download CTA", async () => {
@@ -178,7 +179,7 @@ describe("ProjectDetailPage render UX", () => {
     render(<ProjectDetailPage projectId={baseProject().id} onBack={() => {}} />);
 
     expect(
-      await screen.findByRole("button", { name: "+ Выбрать файлы" }),
+      await screen.findByRole("button", { name: "Выбрать файлы" }),
     ).toBeInTheDocument();
     const input = document.querySelector(
       'input[type="file"]',
@@ -198,7 +199,7 @@ describe("ProjectDetailPage render UX", () => {
     render(<ProjectDetailPage projectId={baseProject().id} onBack={() => {}} />);
 
     expect(
-      await screen.findByRole("button", { name: "+ Выбрать файл" }),
+      await screen.findByRole("button", { name: "Выбрать файл" }),
     ).toBeInTheDocument();
     const input = document.querySelector(
       'input[type="file"]',
@@ -225,7 +226,7 @@ describe("ProjectDetailPage render UX", () => {
       screen.getByText(/Не удалось обработать аудио/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Обработать" }),
+      screen.getByRole("button", { name: /Попробовать снова/i }),
     ).toBeEnabled();
   });
 });

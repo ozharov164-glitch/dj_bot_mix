@@ -15,6 +15,22 @@ declare module "*?raw" {
   export default content;
 }
 
+interface TelegramHapticFeedback {
+  impactOccurred?: (
+    style: "light" | "medium" | "heavy" | "rigid" | "soft",
+  ) => void;
+  notificationOccurred?: (type: "error" | "success" | "warning") => void;
+  selectionChanged?: () => void;
+}
+
+interface TelegramBackButton {
+  show?: () => void;
+  hide?: () => void;
+  onClick?: (cb: () => void) => void;
+  offClick?: (cb: () => void) => void;
+  isVisible?: boolean;
+}
+
 interface TelegramWebApp {
   ready: () => void;
   expand: () => void;
@@ -23,6 +39,8 @@ interface TelegramWebApp {
   themeParams?: Record<string, string>;
   setHeaderColor?: (color: string) => void;
   setBackgroundColor?: (color: string) => void;
+  HapticFeedback?: TelegramHapticFeedback;
+  BackButton?: TelegramBackButton;
 }
 
 interface Window {

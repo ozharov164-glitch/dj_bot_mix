@@ -14,7 +14,7 @@ export function OutsideTelegramPage() {
 
       <section className="panel">
         <p className="muted">
-          Мы намеренно не показываем форму «войти» вне Telegram — это защита от
+          Мы намеренно не показываем форму входа вне Telegram — это защита от
           подмены пользователя.
         </p>
         {import.meta.env.DEV ? (
