@@ -9,6 +9,7 @@ import mix from "../assets/icons/mix-v1.png";
 import plus from "../assets/icons/plus-v1.png";
 import projects from "../assets/icons/projects-v1.png";
 import spark from "../assets/icons/spark-v1.png";
+import startSpark from "../assets/icons/start-spark-v1.png";
 import trash from "../assets/icons/trash-v1.png";
 import upload from "../assets/icons/upload-v1.png";
 
@@ -74,6 +75,11 @@ export function IconUpload(props: IconProps) {
 
 export function IconSpark(props: IconProps) {
   return <RasterIcon src={spark} {...props} />;
+}
+
+/** CTA spark for onboarding «Начать» — mint glow, separate from chrome IconSpark. */
+export function IconStartSpark(props: IconProps) {
+  return <RasterIcon src={startSpark} {...props} />;
 }
 
 export function IconMixMark(props: IconProps) {
