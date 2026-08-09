@@ -1,5 +1,6 @@
 import type { ImgHTMLAttributes } from "react";
 import arrowLeft from "../assets/icons/arrow-left-v1.png";
+import check from "../assets/icons/check-v1.png";
 import chevronDown from "../assets/icons/chevron-down-v1.png";
 import chevronRight from "../assets/icons/chevron-right-v1.png";
 import chevronUp from "../assets/icons/chevron-up-v1.png";
@@ -77,9 +78,13 @@ export function IconSpark(props: IconProps) {
   return <RasterIcon src={spark} {...props} />;
 }
 
-/** CTA spark for onboarding «Начать» — mint glow, separate from chrome IconSpark. */
+/** CTA spark for onboarding «Начать» — cyan glow, separate from chrome IconSpark. */
 export function IconStartSpark(props: IconProps) {
   return <RasterIcon src={startSpark} {...props} />;
+}
+
+export function IconCheck(props: IconProps) {
+  return <RasterIcon src={check} {...props} />;
 }
 
 export function IconMixMark(props: IconProps) {

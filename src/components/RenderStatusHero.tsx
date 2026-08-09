@@ -252,10 +252,12 @@ export function RenderStatusHero({
         </div>
 
         {isRunning || isQueued ? (
-          <div className="render-hero__progress" aria-hidden="true">
+          <div className="render-hero__progress render-hero__progress--active" aria-hidden="true">
             <span className="render-hero__shimmer" />
           </div>
-        ) : null}
+        ) : (
+          <div className="render-hero__progress" aria-hidden="true" />
+        )}
       </div>
     </section>
   );
