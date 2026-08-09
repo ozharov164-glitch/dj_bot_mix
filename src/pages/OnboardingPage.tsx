@@ -136,7 +136,7 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
         }}
       >
         <span className="onboarding__start-spark" aria-hidden="true">
-          <IconStartSpark size={22} className="onboarding__start-spark-icon" />
+          <IconStartSpark size={26} className="onboarding__start-spark-icon" />
         </span>
         <span className="onboarding__start-label">Начать</span>
         <span aria-hidden="true" />

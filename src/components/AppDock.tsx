@@ -27,7 +27,7 @@ export function AppDock({ active, onProjects, onCreate }: AppDockProps) {
           }}
         >
           <span className="app-dock__icon" aria-hidden="true">
-            <IconProjects size={22} />
+            <IconProjects size={24} />
           </span>
           <span className="app-dock__label">Проекты</span>
         </button>
@@ -46,7 +46,7 @@ export function AppDock({ active, onProjects, onCreate }: AppDockProps) {
           }}
         >
           <span className="app-dock__icon app-dock__icon--plus" aria-hidden="true">
-            <IconPlus size={22} />
+            <IconPlus size={24} />
           </span>
           <span className="app-dock__label">Новый</span>
         </button>
