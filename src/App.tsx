@@ -75,7 +75,7 @@ function AppShell() {
     () => isLocalCursorPreview() || hasCompletedOnboarding(),
   );
   const [splashDone, setSplashDone] = useState(false);
-  /** Absolute deadline — set once when marketing splash first mounts. */
+  /** Opening splash deadline — starts at first in-Telegram paint, never after gates. */
   const splashDeadlineRef = useRef<number | null>(null);
   const [route, setRoute] = useState<Route>({ name: "projects" });
   const [direction, setDirection] = useState<NavDirection>("none");
@@ -97,24 +97,11 @@ function AppShell() {
     status === "ready" && Boolean(consent?.accepted) && onboardingDone;
   const authPending = status === "checking" || status === "authenticating";
 
+  // Opening animation runs once at boot — before consent / «Начать».
   useEffect(() => {
-    // After consent / onboarding screens, allow a fresh marketing splash.
-    if (status === "ready" && consent && !consent.accepted) {
-      splashDeadlineRef.current = null;
-      setSplashDone(false);
+    if (status === "outside") {
       return;
     }
-    if (status === "ready" && !onboardingDone) {
-      splashDeadlineRef.current = null;
-      setSplashDone(false);
-      return;
-    }
-
-    // Clock starts only with the marketing splash (not during quiet auth).
-    if (!postConsentReady) {
-      return;
-    }
-
     if (splashDeadlineRef.current == null) {
       splashDeadlineRef.current = performance.now() + studioSplashMinMs();
     }
@@ -126,7 +113,7 @@ function AppShell() {
       setSplashDone(true);
     }, remaining);
     return () => window.clearTimeout(timer);
-  }, [postConsentReady, status, consent, onboardingDone]);
+  }, [status]);
 
   const showChrome =
     postConsentReady && splashDone && bootStatus === "ready";
@@ -151,6 +138,15 @@ function AppShell() {
     );
   }
 
+  // 1) Marketing open splash first (auth continues underneath).
+  if (!splashDone) {
+    return (
+      <ShellFrame>
+        <StudioSplash />
+      </ShellFrame>
+    );
+  }
+
   if (status === "error") {
     return (
       <ShellFrame>
@@ -168,7 +164,7 @@ function AppShell() {
     );
   }
 
-  // Quiet auth gate — no DJ splash (avoids a half-second false start).
+  // Auth still finishing after splash — quiet, no second DJ intro.
   if (authPending) {
     return (
       <ShellFrame>
@@ -183,6 +179,7 @@ function AppShell() {
     );
   }
 
+  // 2) Legal / onboarding only after opening splash — then straight into studio.
   if (status === "ready" && !consent?.accepted) {
     return (
       <ShellFrame>
@@ -199,7 +196,7 @@ function AppShell() {
     );
   }
 
-  if (bootStatus === "error" && splashDone) {
+  if (bootStatus === "error") {
     return (
       <ShellFrame>
         <main className="page">
@@ -219,15 +216,10 @@ function AppShell() {
     );
   }
 
-  // Marketing splash mounts once after session is ready — single play.
-  if (
-    !splashDone ||
-    bootStatus === "idle" ||
-    bootStatus === "loading"
-  ) {
+  if (bootStatus === "idle" || bootStatus === "loading") {
     return (
       <ShellFrame>
-        <StudioSplash />
+        <LoadingPage message="Собираем студию…" />
       </ShellFrame>
     );
   }
