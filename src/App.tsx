@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
 import { AppDataProvider, useAppData } from "./boot/AppDataProvider";
 import { AppDock } from "./components/AppDock";
@@ -17,7 +17,6 @@ import {
 import { hapticImpact, syncTelegramBackButton } from "./lib/telegram";
 import { ConsentPage } from "./pages/ConsentPage";
 import { CreateProjectPage } from "./pages/CreateProjectPage";
-import { LoadingPage } from "./pages/LoadingPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { OutsideTelegramPage } from "./pages/OutsideTelegramPage";
 import { ProjectDetailPage } from "./pages/ProjectDetailPage";
@@ -75,6 +74,8 @@ function AppShell() {
     () => isLocalCursorPreview() || hasCompletedOnboarding(),
   );
   const [splashDone, setSplashDone] = useState(false);
+  /** Absolute deadline — survives auth→ready without restarting the splash. */
+  const splashDeadlineRef = useRef<number | null>(null);
   const [route, setRoute] = useState<Route>({ name: "projects" });
   const [direction, setDirection] = useState<NavDirection>("none");
 
@@ -91,23 +92,43 @@ function AppShell() {
     setOnboardingDone(true);
   }, []);
 
-  const studioGateOpen =
+  const postConsentReady =
     status === "ready" && Boolean(consent?.accepted) && onboardingDone;
+  const authPending = status === "checking" || status === "authenticating";
 
   useEffect(() => {
-    if (!studioGateOpen) {
+    // Consent / onboarding interrupt the boot splash — restart after they finish.
+    if (status === "ready" && consent && !consent.accepted) {
+      splashDeadlineRef.current = null;
       setSplashDone(false);
       return;
     }
-    setSplashDone(false);
+    if (status === "ready" && !onboardingDone) {
+      splashDeadlineRef.current = null;
+      setSplashDone(false);
+      return;
+    }
+
+    const clockActive = authPending || postConsentReady;
+    if (!clockActive) {
+      return;
+    }
+
+    if (splashDeadlineRef.current == null) {
+      splashDeadlineRef.current = performance.now() + studioSplashMinMs();
+    }
+    const remaining = Math.max(
+      0,
+      splashDeadlineRef.current - performance.now(),
+    );
     const timer = window.setTimeout(() => {
       setSplashDone(true);
-    }, studioSplashMinMs());
+    }, remaining);
     return () => window.clearTimeout(timer);
-  }, [studioGateOpen]);
+  }, [authPending, postConsentReady, status, consent, onboardingDone]);
 
   const showChrome =
-    studioGateOpen && splashDone && bootStatus === "ready";
+    postConsentReady && splashDone && bootStatus === "ready";
   const showBack = showChrome && route.name !== "projects";
   const withDock =
     showChrome && (route.name === "projects" || route.name === "create");
@@ -120,20 +141,6 @@ function AppShell() {
       navigate({ name: "projects" }, "back");
     });
   }, [showBack, navigate]);
-
-  if (status === "checking" || status === "authenticating") {
-    return (
-      <ShellFrame>
-        <LoadingPage
-          message={
-            status === "authenticating"
-              ? "Вход через Telegram…"
-              : "Открываем студию…"
-          }
-        />
-      </ShellFrame>
-    );
-  }
 
   if (status === "outside") {
     return (
@@ -160,7 +167,7 @@ function AppShell() {
     );
   }
 
-  if (!consent?.accepted) {
+  if (status === "ready" && !consent?.accepted) {
     return (
       <ShellFrame>
         <ConsentPage />
@@ -168,7 +175,7 @@ function AppShell() {
     );
   }
 
-  if (!onboardingDone) {
+  if (status === "ready" && !onboardingDone) {
     return (
       <ShellFrame>
         <OnboardingPage onContinue={finishOnboarding} />
@@ -196,10 +203,22 @@ function AppShell() {
     );
   }
 
-  if (!splashDone || bootStatus === "idle" || bootStatus === "loading") {
+  // One continuous StudioSplash across auth → boot (no remount / restart).
+  if (
+    authPending ||
+    !splashDone ||
+    bootStatus === "idle" ||
+    bootStatus === "loading"
+  ) {
+    const splashStatus =
+      status === "authenticating"
+        ? "Вход через Telegram…"
+        : status === "checking"
+          ? "Открываем студию…"
+          : undefined;
     return (
       <ShellFrame>
-        <StudioSplash />
+        <StudioSplash status={splashStatus} />
       </ShellFrame>
     );
   }
