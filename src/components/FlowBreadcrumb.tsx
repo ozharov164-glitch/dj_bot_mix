@@ -1,5 +1,4 @@
 import type { CSSProperties } from "react";
-import { IconCheck } from "./icons";
 
 type FlowStep = {
   id: string;
@@ -40,7 +39,7 @@ export function FlowBreadcrumb({ steps, trail }: FlowBreadcrumbProps) {
           >
             <span className="flow-crumb__dot" aria-hidden="true">
               {step.state === "done" ? (
-                <IconCheck size={12} className="flow-crumb__check" />
+                <span className="flow-crumb__check" />
               ) : (
                 <span className="flow-crumb__n">{index + 1}</span>
               )}

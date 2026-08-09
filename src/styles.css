@@ -3280,6 +3280,8 @@ select.field__input option {
 .flow-crumb__steps {
   --flow-progress: 0;
   --flow-cols: 3;
+  --flow-dot: 1.35rem;
+  --flow-rail: #12161e;
   list-style: none;
   margin: 0;
   padding: 0.55rem 0.65rem 0.5rem;
@@ -3289,38 +3291,43 @@ select.field__input option {
   gap: 0;
   position: relative;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--flow-rail);
   border: 1px solid var(--border);
   overflow: hidden;
 }
 
+/* Track sits BETWEEN dots — inset by half-dot + gap so it never enters circles */
 .flow-crumb__steps::before,
 .flow-crumb__steps::after {
   content: "";
   position: absolute;
-  left: calc((100% / var(--flow-cols) / 2));
-  right: calc((100% / var(--flow-cols) / 2));
-  top: calc(0.55rem + 0.675rem);
-  height: 1px;
+  left: calc((100% / var(--flow-cols) / 2) + (var(--flow-dot) / 2) + 0.28rem);
+  right: calc((100% / var(--flow-cols) / 2) + (var(--flow-dot) / 2) + 0.28rem);
+  top: calc(0.55rem + (var(--flow-dot) / 2) - 1.25px);
+  height: 2.5px;
   border-radius: 999px;
   pointer-events: none;
   z-index: 0;
 }
 
 .flow-crumb__steps::before {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .flow-crumb__steps::after {
   right: auto;
   width: calc(
-    (100% - (100% / var(--flow-cols))) * var(--flow-progress)
+    (100% - (100% / var(--flow-cols)) - var(--flow-dot) - 0.56rem) *
+      var(--flow-progress)
   );
   background: linear-gradient(
     90deg,
-    rgba(255, 45, 85, 0.55),
-    rgba(255, 45, 85, 0.28)
+    rgba(255, 45, 85, 0.95) 0%,
+    rgba(255, 90, 120, 0.85) 55%,
+    rgba(255, 45, 85, 0.55) 100%
   );
+  box-shadow: 0 0 10px rgba(255, 45, 85, 0.35);
 }
 
 .flow-crumb__step {
@@ -3337,18 +3344,19 @@ select.field__input option {
 
 .flow-crumb__dot {
   position: relative;
-  z-index: 1;
-  width: 1.35rem;
-  height: 1.35rem;
+  z-index: 2;
+  width: var(--flow-dot);
+  height: var(--flow-dot);
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
+  background: #1a2029;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
   color: var(--muted);
   font-size: 0.65rem;
   font-weight: 700;
-  box-shadow: 0 0 0 3px var(--surface);
+  /* Opaque halo matching rail — kills any residual track bleed */
+  box-shadow: 0 0 0 5px var(--flow-rail);
 }
 
 .flow-crumb__n {
@@ -3357,6 +3365,12 @@ select.field__input option {
 
 .flow-crumb__check {
   display: block;
+  width: 0.42rem;
+  height: 0.72rem;
+  margin-top: -0.12rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
 }
 
 .flow-crumb__label {
@@ -3376,9 +3390,10 @@ select.field__input option {
 }
 
 .flow-crumb__step--done .flow-crumb__dot {
-  background: var(--accent-soft);
-  border-color: rgba(255, 45, 85, 0.4);
+  background: rgba(255, 45, 85, 0.16);
+  border-color: rgba(255, 45, 85, 0.55);
   color: var(--accent);
+  box-shadow: 0 0 0 5px var(--flow-rail);
 }
 
 .flow-crumb__step--current {
@@ -3387,11 +3402,11 @@ select.field__input option {
 
 .flow-crumb__step--current .flow-crumb__dot {
   background: var(--accent);
-  border-color: rgba(255, 45, 85, 0.65);
+  border-color: rgba(255, 120, 140, 0.85);
   color: var(--accent-ink);
   box-shadow:
-    0 0 0 3px var(--surface),
-    0 0 0 5px rgba(255, 45, 85, 0.14);
+    0 0 0 5px var(--flow-rail),
+    0 0 0 7px rgba(255, 45, 85, 0.16);
 }
 
 .flow-crumb__step--current .flow-crumb__label {
