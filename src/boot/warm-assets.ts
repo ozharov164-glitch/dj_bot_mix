@@ -11,6 +11,8 @@ import projects from "../assets/icons/projects-v1.png";
 import trash from "../assets/icons/trash-v1.png";
 import upload from "../assets/icons/upload-v1.png";
 import brand from "../assets/brand/fadeline-signal-v1.png";
+import wordmark from "../assets/brand/fadeline-wordmark-v1.png";
+import djHeader from "../assets/brand/fadeline-dj-silhouette-v6.png";
 
 const ICON_URLS = [
   arrowLeft,
@@ -26,6 +28,8 @@ const ICON_URLS = [
   trash,
   upload,
   brand,
+  wordmark,
+  djHeader,
 ];
 
 function preloadImage(src: string): Promise<void> {

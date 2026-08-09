@@ -10,7 +10,7 @@ export function getTelegramWebApp(): TelegramWebApp | undefined {
   return window.Telegram?.WebApp;
 }
 
-/** Expand + fullscreen (desktop/Telegram) — fail soft on older clients. */
+/** Expand Mini App chrome — fail soft. Do not auto-request fullscreen on desktop. */
 export function prepareTelegramViewport(): void {
   const webApp = getTelegramWebApp();
   if (!webApp) return;
@@ -30,11 +30,6 @@ export function prepareTelegramViewport(): void {
     webApp.disableVerticalSwipes?.();
   } catch {
     // ignore
-  }
-  try {
-    webApp.requestFullscreen?.();
-  } catch {
-    // ignore — not all clients support Bot API 8 fullscreen
   }
 }
 

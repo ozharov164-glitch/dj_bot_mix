@@ -5,7 +5,15 @@ import { AppDock } from "./components/AppDock";
 import { BrandMark } from "./components/BrandMark";
 import { ErrorBanner } from "./components/ErrorBanner";
 import { PageStage, type NavDirection } from "./components/PageStage";
+import {
+  StudioSplash,
+  studioSplashMinMs,
+} from "./components/StudioSplash";
 import { isLocalCursorPreview } from "./dev/preview-flag";
+import {
+  hasCompletedOnboarding,
+  markOnboardingCompleted,
+} from "./lib/onboarding-storage";
 import { hapticImpact, syncTelegramBackButton } from "./lib/telegram";
 import { ConsentPage } from "./pages/ConsentPage";
 import { CreateProjectPage } from "./pages/CreateProjectPage";
@@ -63,9 +71,10 @@ function ShellFrame({
 function AppShell() {
   const { status, consent, error, retry } = useAuth();
   const { bootStatus, bootError, retryBoot, upsertProject } = useAppData();
-  const [onboardingDone, setOnboardingDone] = useState(() =>
-    isLocalCursorPreview(),
+  const [onboardingDone, setOnboardingDone] = useState(
+    () => isLocalCursorPreview() || hasCompletedOnboarding(),
   );
+  const [splashDone, setSplashDone] = useState(false);
   const [route, setRoute] = useState<Route>({ name: "projects" });
   const [direction, setDirection] = useState<NavDirection>("none");
 
@@ -77,11 +86,28 @@ function AppShell() {
     }
   }, []);
 
+  const finishOnboarding = useCallback(() => {
+    markOnboardingCompleted();
+    setOnboardingDone(true);
+  }, []);
+
+  const studioGateOpen =
+    status === "ready" && Boolean(consent?.accepted) && onboardingDone;
+
+  useEffect(() => {
+    if (!studioGateOpen) {
+      setSplashDone(false);
+      return;
+    }
+    setSplashDone(false);
+    const timer = window.setTimeout(() => {
+      setSplashDone(true);
+    }, studioSplashMinMs());
+    return () => window.clearTimeout(timer);
+  }, [studioGateOpen]);
+
   const showChrome =
-    status === "ready" &&
-    Boolean(consent?.accepted) &&
-    onboardingDone &&
-    bootStatus === "ready";
+    studioGateOpen && splashDone && bootStatus === "ready";
   const showBack = showChrome && route.name !== "projects";
   const withDock =
     showChrome && (route.name === "projects" || route.name === "create");
@@ -102,7 +128,7 @@ function AppShell() {
           message={
             status === "authenticating"
               ? "Вход через Telegram…"
-              : "Загрузка…"
+              : "Открываем студию…"
           }
         />
       </ShellFrame>
@@ -145,20 +171,12 @@ function AppShell() {
   if (!onboardingDone) {
     return (
       <ShellFrame>
-        <OnboardingPage onContinue={() => setOnboardingDone(true)} />
+        <OnboardingPage onContinue={finishOnboarding} />
       </ShellFrame>
     );
   }
 
-  if (bootStatus === "idle" || bootStatus === "loading") {
-    return (
-      <ShellFrame>
-        <LoadingPage message="Готовим студию…" />
-      </ShellFrame>
-    );
-  }
-
-  if (bootStatus === "error") {
+  if (bootStatus === "error" && splashDone) {
     return (
       <ShellFrame>
         <main className="page">
@@ -174,6 +192,14 @@ function AppShell() {
             onRetry={retryBoot}
           />
         </main>
+      </ShellFrame>
+    );
+  }
+
+  if (!splashDone || bootStatus === "idle" || bootStatus === "loading") {
+    return (
+      <ShellFrame>
+        <StudioSplash />
       </ShellFrame>
     );
   }

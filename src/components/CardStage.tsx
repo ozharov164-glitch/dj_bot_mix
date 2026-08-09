@@ -21,6 +21,8 @@ type CardStageProps = {
 };
 
 const TRANSITION_MS = 560;
+/** Keep stage compact — avoids a tall locked viewport with dead space. */
+const STAGE_MAX_PX = 232;
 
 function resolveDirection(
   from: number,
@@ -34,8 +36,8 @@ function resolveDirection(
 }
 
 /**
- * One-at-a-time card stage with locked viewport height (tallest card)
- * and opacity crossfade — no layout resize jerks between slides.
+ * One-at-a-time card stage. Viewport follows the active card height
+ * (capped) so short slides don't leave a black void.
  */
 export function CardStage({
   cards,
@@ -46,7 +48,7 @@ export function CardStage({
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [exiting, setExiting] = useState<StageCard | null>(null);
   const [animating, setAnimating] = useState(false);
-  const [viewportHeight, setViewportHeight] = useState(0);
+  const [heights, setHeights] = useState<Record<string, number>>({});
   const cardsRef = useRef(cards);
   const animatingRef = useRef(false);
   const measureRef = useRef<HTMLDivElement>(null);
@@ -63,14 +65,16 @@ export function CardStage({
     if (!root) return;
 
     const measure = () => {
-      const slides = root.querySelectorAll<HTMLElement>(".card-stage__measure-slide");
-      let max = 0;
-      for (const slide of slides) {
-        max = Math.max(max, slide.offsetHeight);
-      }
-      if (max > 0) {
-        setViewportHeight(max);
-      }
+      const slides = root.querySelectorAll<HTMLElement>(
+        ".card-stage__measure-slide",
+      );
+      const next: Record<string, number> = {};
+      slides.forEach((slide, i) => {
+        const id = cardsRef.current[i]?.id;
+        if (!id) return;
+        next[id] = slide.offsetHeight;
+      });
+      setHeights(next);
     };
 
     measure();
@@ -133,9 +137,12 @@ export function CardStage({
     setIndex(next);
   }
 
+  const rawHeight = heights[active.id] ?? 0;
   const viewportStyle =
-    viewportHeight > 0
-      ? ({ "--stage-h": `${viewportHeight}px` } as CSSProperties)
+    rawHeight > 0
+      ? ({
+          "--stage-h": `${Math.min(rawHeight, STAGE_MAX_PX)}px`,
+        } as CSSProperties)
       : undefined;
 
   return (

@@ -63,7 +63,7 @@ describe("CardStage", () => {
     expect(within(viewport).queryByText("В очереди")).not.toBeInTheDocument();
   });
 
-  it("locks viewport to tallest card so content is not clipped", () => {
+  it("sizes viewport to the active card without clipping its content", () => {
     const { container } = render(
       <CardStage
         cards={[
@@ -107,5 +107,10 @@ describe("CardStage", () => {
     expect(
       container.querySelectorAll(".card-stage__measure-slide"),
     ).toHaveLength(2);
+    // jsdom often reports 0 offsetHeight; when measured, CSS var is set in px.
+    const stageH = viewport.style.getPropertyValue("--stage-h");
+    if (stageH) {
+      expect(stageH).toMatch(/px$/);
+    }
   });
 });

@@ -1,7 +1,8 @@
 import signalMark from "../assets/brand/fadeline-signal-v1.png";
+import wordmark from "../assets/brand/fadeline-wordmark-v1.png";
 
 type BrandMarkProps = {
-  /** hero = large centered; compact = small header; row = side-by-side */
+  /** hero = large centered; compact = small header; row = home lockup */
   variant?: "hero" | "compact" | "row";
   className?: string;
   showTagline?: boolean;
@@ -10,7 +11,7 @@ type BrandMarkProps = {
   animated?: boolean;
 };
 
-/** Premium FADELINE mark — one reusable raster signal asset + wordmark. */
+/** Premium FADELINE mark — chrome signal glyph + 3D DJ wordmark raster. */
 export function BrandMark({
   variant = "compact",
   className = "",
@@ -37,7 +38,12 @@ export function BrandMark({
         </div>
       ) : null}
       <div className="brand-mark__text">
-        <p className="brand-mark__name">FADELINE</p>
+        <img
+          className="brand-mark__wordmark"
+          src={wordmark}
+          alt="FADELINE"
+          draggable={false}
+        />
         {showTagline ? (
           <p className="brand-mark__tagline">Дыши музыкой</p>
         ) : null}

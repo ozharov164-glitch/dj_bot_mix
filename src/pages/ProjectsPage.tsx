@@ -19,6 +19,7 @@ import {
 } from "../lib/projects-list";
 import { formatFileCount } from "../lib/plural";
 import { hapticImpact } from "../lib/telegram";
+import djHeader from "../assets/brand/fadeline-dj-silhouette-v6.png";
 
 type ProjectsPageProps = {
   onCreate: () => void;
@@ -191,11 +192,28 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
     <main className="page">
       <header className="page-header page-header--home">
         <div className="page-header__main">
-          <BrandMark variant="row" />
-          <h1 className="page-title">Мои проекты</h1>
-          <p className="page-subtitle">
-            Миксы и эффекты из ваших файлов — результат приходит в чат с ботом.
-          </p>
+          <div className="home-masthead">
+            <div className="home-masthead__copy">
+              <BrandMark variant="row" />
+              <div className="home-hero">
+                <p className="home-hero__eyebrow">Ваша студия</p>
+                <h1 className="page-title page-title--home">Мои проекты</h1>
+                <p className="page-subtitle">
+                  Миксы и эффекты из ваших файлов — результат приходит в чат с
+                  ботом.
+                </p>
+              </div>
+            </div>
+            <div className="home-masthead__art" aria-hidden="true">
+              <span className="home-masthead__glow" />
+              <img
+                className="home-masthead__dj"
+                src={djHeader}
+                alt=""
+                draggable={false}
+              />
+            </div>
+          </div>
         </div>
       </header>
 

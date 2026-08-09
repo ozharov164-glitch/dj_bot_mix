@@ -1,10 +1,6 @@
-import { BrandMark } from "../components/BrandMark";
+import { StudioSplash } from "../components/StudioSplash";
 
-export function LoadingPage({ message = "Загрузка…" }: { message?: string }) {
-  return (
-    <main className="page page--centered">
-      <BrandMark variant="hero" showTagline={false} />
-      <p className="loading-text">{message}</p>
-    </main>
-  );
+/** Auth / boot gate — always the marketing studio splash. */
+export function LoadingPage({ message }: { message?: string }) {
+  return <StudioSplash status={message} />;
 }

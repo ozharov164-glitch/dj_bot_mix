@@ -461,7 +461,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
             <p className="stage-tracks__empty">Файлы ещё не добавлены</p>
           ) : (
             <ul className="stage-summary">
-              {project.files.map((file, i) => (
+              {project.files.slice(0, 4).map((file, i) => (
                 <li key={file.id}>
                   <span className="stage-summary__n">{i + 1}</span>
                   <span className="stage-summary__name">
@@ -469,6 +469,11 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
                   </span>
                 </li>
               ))}
+              {project.files.length > 4 ? (
+                <li className="stage-summary__more">
+                  ещё {project.files.length - 4}
+                </li>
+              ) : null}
             </ul>
           )}
         </div>
