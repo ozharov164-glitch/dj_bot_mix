@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import type { RenderJobStatus } from "../api/client";
-import signalMark from "../assets/brand/fadeline-signal-v1.png";
-import { IconFxMark, IconSpark } from "./icons";
 
 type RenderStatusHeroProps = {
   status: RenderJobStatus;
@@ -10,6 +8,7 @@ type RenderStatusHeroProps = {
   detail?: string | null;
 };
 
+const BAR_HEIGHTS = [40, 70, 50, 90, 100, 80, 60, 75, 35];
 const MORPH_MS = 480;
 
 type Snapshot = {
@@ -23,15 +22,62 @@ function StatusMark({ status }: { status: RenderJobStatus }) {
   switch (status) {
     case "RUNNING":
       return (
-        <span className="render-hero__signal-wrap">
-          <span className="render-hero__signal-halo" />
-          <img className="render-hero__signal" src={signalMark} alt="" />
-        </span>
+        <>
+          <span className="render-hero__ring render-hero__ring--1" />
+          <span className="render-hero__ring render-hero__ring--2" />
+          <span className="render-hero__ring render-hero__ring--3" />
+          <span className="render-hero__arc" />
+          <span className="render-hero__particles">
+            {Array.from({ length: 8 }, (_, i) => (
+              <span key={i} className="render-hero__particle" />
+            ))}
+          </span>
+          <span className="render-hero__bars">
+            {BAR_HEIGHTS.map((h, i) => (
+              <span
+                key={i}
+                className="render-hero__bar"
+                style={{ height: `${h}%` }}
+              />
+            ))}
+          </span>
+        </>
       );
     case "QUEUED":
       return (
         <span className="render-hero__queue">
-          <IconFxMark size={96} />
+          <svg
+            className="render-hero__queue-ring render-hero__queue-ring--outer"
+            viewBox="0 0 100 100"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle
+              cx="50"
+              cy="50"
+              r="46"
+              stroke="currentColor"
+              strokeDasharray="80 200"
+              strokeLinecap="round"
+              strokeWidth="2"
+            />
+          </svg>
+          <svg
+            className="render-hero__queue-ring render-hero__queue-ring--inner"
+            viewBox="0 0 100 100"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle
+              cx="50"
+              cy="50"
+              r="46"
+              stroke="currentColor"
+              strokeDasharray="140 140"
+              strokeLinecap="round"
+              strokeWidth="3"
+            />
+          </svg>
           <span className="render-hero__queue-dot" />
         </span>
       );
@@ -39,7 +85,21 @@ function StatusMark({ status }: { status: RenderJobStatus }) {
       return (
         <span className="render-hero__check-wrap">
           <span className="render-hero__check-pulse" />
-          <IconSpark size={72} />
+          <svg
+            className="render-hero__check-svg"
+            viewBox="0 0 48 48"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="24" cy="24" r="20" className="render-hero__check-ring" />
+            <path
+              className="render-hero__check-path"
+              d="M14 25.5 21 32.5 34 17"
+              strokeWidth="3.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </span>
       );
     case "FAILED":
