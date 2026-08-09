@@ -1274,6 +1274,31 @@ a.link-button {
   margin-inline: auto;
 }
 
+/* Kill shared .page > * stagger — it restarts when children mount/unmount. */
+.studio-splash > * {
+  animation: none;
+}
+
+.boot-quiet {
+  gap: 1rem;
+  padding-block: 3.5rem 2rem;
+  max-width: 22rem;
+  margin-inline: auto;
+  align-items: center;
+  text-align: center;
+}
+
+.boot-quiet > * {
+  animation: none;
+}
+
+.boot-quiet__status {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 550;
+  color: var(--muted);
+}
+
 .studio-splash .brand-mark {
   margin-bottom: 0.15rem;
   animation: studio-brand-in 0.7s var(--ease-out) both;
