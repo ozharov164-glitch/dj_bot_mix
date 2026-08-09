@@ -2641,47 +2641,48 @@ select.field__input option {
   box-shadow: inset 0 0 0 3px var(--surface);
 }
 
-/* —— Render hero —— */
+/* —— Render hero (symmetric DJ deck card) —— */
 .render-hero {
   position: relative;
-  margin: 0.15rem 0 0.35rem;
+  margin: 0;
+  width: 100%;
 }
 
 .render-hero__glow {
   position: absolute;
-  inset: -18px;
+  inset: -14px;
   border-radius: 28px;
   background: radial-gradient(
-    circle at 50% 40%,
-    rgba(255, 45, 85, 0.28),
-    transparent 62%
+    circle at 50% 38%,
+    rgba(255, 45, 85, 0.32),
+    transparent 64%
   );
-  filter: blur(18px);
+  filter: blur(20px);
   pointer-events: none;
-  animation: hero-breathe 3s ease-in-out infinite;
+  animation: hero-breathe 2.6s ease-in-out infinite;
   z-index: 0;
 }
 
 .render-hero__glow--a {
-  inset: -22px;
+  inset: -18px;
   background: radial-gradient(
-    circle at 50% 35%,
-    rgba(255, 45, 85, 0.38),
-    transparent 60%
+    circle at 50% 32%,
+    rgba(255, 45, 85, 0.42),
+    transparent 58%
   );
-  filter: blur(28px);
+  filter: blur(26px);
   mix-blend-mode: screen;
 }
 
 .render-hero__glow--b {
-  inset: -8px;
+  inset: -6px;
   background: radial-gradient(
-    circle at 50% 45%,
-    rgba(255, 45, 85, 0.22),
-    transparent 55%
+    circle at 50% 55%,
+    rgba(255, 45, 85, 0.2),
+    transparent 52%
   );
-  filter: blur(16px);
-  animation-delay: -1.5s;
+  filter: blur(14px);
+  animation-delay: -1.3s;
   mix-blend-mode: screen;
 }
 
@@ -2704,32 +2705,91 @@ select.field__input option {
 .render-hero__card {
   position: relative;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto auto auto;
+  justify-items: center;
   align-items: center;
-  text-align: center;
-  min-height: 17.5rem;
-  padding: 1.85rem 1.15rem 2.15rem;
+  gap: 1rem;
+  width: 100%;
+  padding: 1.35rem 1.2rem 1.2rem;
   border-radius: var(--radius-card);
-  background: #1c2021;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  /* Rings/particles may bloom; progress is self-clipped inside track */
-  overflow: visible;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  background:
+    radial-gradient(
+      120% 80% at 50% 0%,
+      rgba(255, 45, 85, 0.1),
+      transparent 55%
+    ),
+    linear-gradient(180deg, #161a1f 0%, #10141a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 16px 40px rgba(0, 0, 0, 0.4);
+  text-align: center;
 }
 
 .render-hero__mark {
   position: relative;
-  width: 7.5rem;
-  height: 7.5rem;
-  min-height: 7.5rem;
+  width: 7.25rem;
+  height: 7.25rem;
+  min-height: 7.25rem;
   display: grid;
   grid-template-areas: "mark";
   place-items: center;
-  margin-bottom: 1.25rem;
+  margin: 0;
   flex-shrink: 0;
-  /* Room for ring-pulse scale beyond the mark box */
   overflow: visible;
+}
+
+.render-hero__platter {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.render-hero__platter-disc {
+  position: absolute;
+  inset: 8%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 50%, #1a1e24 0 18%, transparent 19%),
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 255, 255, 0.05) 0 1px,
+      transparent 1px 5px
+    ),
+    radial-gradient(circle at 35% 30%, #2a3038, #0c0e12 70%);
+  box-shadow:
+    0 0 0 1px rgba(255, 45, 85, 0.22),
+    0 0 28px rgba(255, 45, 85, 0.2),
+    inset 0 0 24px rgba(0, 0, 0, 0.55);
+  animation: platter-spin 7.5s linear infinite;
+}
+
+.render-hero__platter-groove {
+  position: absolute;
+  inset: 18%;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 45, 85, 0.08);
+  animation: platter-spin 7.5s linear infinite reverse;
+  pointer-events: none;
+}
+
+.render-hero__platter-core {
+  position: absolute;
+  width: 18%;
+  height: 18%;
+  border-radius: 999px;
+  background: radial-gradient(circle, #ff6b86 0%, var(--accent) 55%, #7a1028 100%);
+  box-shadow:
+    0 0 14px rgba(255, 45, 85, 0.75),
+    inset 0 0 4px rgba(255, 255, 255, 0.35);
+  z-index: 3;
+  animation: platter-core-pulse 1.4s ease-in-out infinite;
 }
 
 .render-hero__signal-wrap {
@@ -2761,8 +2821,12 @@ select.field__input option {
 
 @keyframes signal-float {
   0%,
-  100% { transform: translate3d(0, 0, 0) scale(0.98); }
-  50% { transform: translate3d(0, -3px, 0) scale(1); }
+  100% {
+    transform: translate3d(0, 0, 0) scale(0.98);
+  }
+  50% {
+    transform: translate3d(0, -3px, 0) scale(1);
+  }
 }
 
 .render-hero__mark-layer {
@@ -2795,9 +2859,10 @@ select.field__input option {
   display: grid;
   grid-template-areas: "copy";
   width: 100%;
-  min-height: 5.4rem;
+  min-height: 4.6rem;
   justify-items: center;
-  align-content: start;
+  align-content: center;
+  margin: 0;
 }
 
 .render-hero__copy {
@@ -2805,7 +2870,9 @@ select.field__input option {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
+  gap: 0.4rem;
   width: 100%;
   will-change: transform, opacity;
 }
@@ -2830,33 +2897,41 @@ select.field__input option {
   position: absolute;
   inset: 0;
   border-radius: 999px;
-  border: 1px solid rgba(255, 45, 85, 0.28);
-  animation: ring-pulse 2.5s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  border: 1px solid rgba(255, 45, 85, 0.32);
+  animation: ring-pulse 2.1s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  pointer-events: none;
 }
 
 .render-hero__ring--2 {
-  animation-delay: 0.8s;
+  inset: -3%;
+  animation-delay: 0.7s;
+  border-color: rgba(255, 45, 85, 0.2);
 }
 
 .render-hero__ring--3 {
-  animation-delay: 1.6s;
+  inset: -7%;
+  animation-delay: 1.35s;
+  border-color: rgba(255, 45, 85, 0.12);
 }
 
 .render-hero__arc {
   position: absolute;
-  inset: 0.55rem;
+  inset: 0.4rem;
   border-radius: 999px;
-  border: 2px dashed rgba(255, 45, 85, 0.22);
-  border-top-color: rgba(255, 45, 85, 0.7);
-  border-bottom-color: rgba(255, 45, 85, 0.55);
-  animation: spin-slow 8s linear infinite;
-  opacity: 0.9;
+  border: 2px solid transparent;
+  border-top-color: rgba(255, 45, 85, 0.95);
+  border-right-color: rgba(255, 90, 120, 0.35);
+  animation: spin-slow 3.8s linear infinite;
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(255, 45, 85, 0.55));
+  pointer-events: none;
 }
 
 .render-hero__particles {
   position: absolute;
-  inset: 0;
+  inset: -4%;
   pointer-events: none;
+  z-index: 1;
 }
 
 .render-hero__particle {
@@ -2867,7 +2942,7 @@ select.field__input option {
   background: var(--accent);
   opacity: 0.35;
   filter: blur(0.4px);
-  animation: particle-drift 6s ease-in-out infinite;
+  animation: particle-drift 4.8s ease-in-out infinite;
 }
 
 .render-hero__particle:nth-child(1) {
@@ -2877,13 +2952,13 @@ select.field__input option {
 .render-hero__particle:nth-child(2) {
   top: 70%;
   left: 80%;
-  animation-duration: 7s;
+  animation-duration: 5.4s;
   animation-delay: -1s;
 }
 .render-hero__particle:nth-child(3) {
   top: 80%;
   left: 15%;
-  animation-duration: 5s;
+  animation-duration: 4.2s;
   animation-delay: -2s;
 }
 .render-hero__particle:nth-child(4) {
@@ -2891,7 +2966,7 @@ select.field__input option {
   left: 75%;
   width: 6px;
   height: 6px;
-  animation-duration: 8s;
+  animation-duration: 6s;
   animation-delay: -3s;
 }
 .render-hero__particle:nth-child(5) {
@@ -2902,13 +2977,13 @@ select.field__input option {
 .render-hero__particle:nth-child(6) {
   top: 40%;
   left: 85%;
-  animation-duration: 5.5s;
+  animation-duration: 4.6s;
   animation-delay: -5s;
 }
 .render-hero__particle:nth-child(7) {
   top: 90%;
   left: 50%;
-  animation-duration: 7.5s;
+  animation-duration: 5.8s;
   animation-delay: -6s;
 }
 .render-hero__particle:nth-child(8) {
@@ -2919,64 +2994,76 @@ select.field__input option {
 
 .render-hero__bars {
   position: relative;
-  z-index: 2;
+  z-index: 4;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   gap: 3px;
-  height: 3.5rem;
-  width: 100%;
-  padding-bottom: 0.35rem;
+  height: 42%;
+  width: 58%;
+  margin-top: 4%;
 }
 
 .render-hero__bar {
-  width: 4px;
+  --bar-h: 60%;
+  width: 3.5px;
+  height: var(--bar-h);
   border-radius: 999px;
-  background: var(--accent);
-  transform-origin: bottom;
-  animation: eq-tall 1s ease-in-out infinite;
+  background: linear-gradient(180deg, #ff8aa0, var(--accent));
+  transform-origin: bottom center;
+  animation: eq-tall 0.72s ease-in-out infinite;
   will-change: transform;
+  box-shadow: 0 0 8px rgba(255, 45, 85, 0.45);
 }
 
-.render-hero__bar:nth-child(5) {
-  box-shadow: 0 0 10px rgba(255, 45, 85, 0.85);
+.render-hero__bar:nth-child(6) {
+  box-shadow: 0 0 14px rgba(255, 45, 85, 0.95);
+  width: 4px;
 }
 
 .render-hero__bar:nth-child(1) {
-  animation-delay: 0.1s;
-  animation-duration: 0.9s;
+  animation-delay: 0.05s;
+  animation-duration: 0.62s;
 }
 .render-hero__bar:nth-child(2) {
-  animation-delay: 0.4s;
-  animation-duration: 1.1s;
+  animation-delay: 0.18s;
+  animation-duration: 0.78s;
 }
 .render-hero__bar:nth-child(3) {
-  animation-delay: 0.2s;
-  animation-duration: 0.8s;
+  animation-delay: 0.08s;
+  animation-duration: 0.55s;
 }
 .render-hero__bar:nth-child(4) {
-  animation-delay: 0.6s;
-  animation-duration: 1.2s;
+  animation-delay: 0.28s;
+  animation-duration: 0.84s;
 }
 .render-hero__bar:nth-child(5) {
-  animation-delay: 0.3s;
-  animation-duration: 1s;
+  animation-delay: 0.12s;
+  animation-duration: 0.7s;
 }
 .render-hero__bar:nth-child(6) {
-  animation-delay: 0.7s;
-  animation-duration: 0.9s;
+  animation-delay: 0.02s;
+  animation-duration: 0.66s;
 }
 .render-hero__bar:nth-child(7) {
-  animation-delay: 0.2s;
-  animation-duration: 1.1s;
+  animation-delay: 0.22s;
+  animation-duration: 0.74s;
 }
 .render-hero__bar:nth-child(8) {
-  animation-delay: 0.5s;
-  animation-duration: 1s;
+  animation-delay: 0.15s;
+  animation-duration: 0.58s;
 }
 .render-hero__bar:nth-child(9) {
+  animation-delay: 0.3s;
+  animation-duration: 0.8s;
+}
+.render-hero__bar:nth-child(10) {
   animation-delay: 0.1s;
-  animation-duration: 1.2s;
+  animation-duration: 0.68s;
+}
+.render-hero__bar:nth-child(11) {
+  animation-delay: 0.25s;
+  animation-duration: 0.6s;
 }
 
 .render-hero__spinner {
@@ -3066,7 +3153,7 @@ select.field__input option {
 }
 
 .render-hero__check-ring {
-  fill: #1c2021;
+  fill: #12161c;
   stroke: rgba(255, 45, 85, 0.45);
   stroke-width: 1.5;
 }
@@ -3111,59 +3198,63 @@ select.field__input option {
 }
 
 .render-hero__title {
-  margin: 0 0 0.4rem;
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  margin: 0;
+  font-size: 1.22rem;
+  font-weight: 760;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
 }
 
 .render-hero__desc,
 .render-hero__detail {
   margin: 0;
   max-width: 28ch;
-  font-size: 0.9rem;
-  line-height: 1.55;
+  font-size: 0.88rem;
+  line-height: 1.45;
   color: var(--muted);
 }
 
 .render-hero__detail {
-  margin-top: 0.45rem;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
+  color: var(--muted-soft);
 }
 
+/* In-flow meter — never absolute overlay on the card edge */
 .render-hero__progress {
-  position: absolute;
-  left: 1.15rem;
-  right: 1.15rem;
-  bottom: 0.95rem;
-  height: 0.72rem;
-  display: grid;
-  place-items: center;
+  width: 100%;
+  max-width: 18.5rem;
+  height: 0;
   opacity: 0;
+  overflow: hidden;
   pointer-events: none;
-  transition: opacity 420ms var(--ease-out);
+  transition:
+    opacity 380ms var(--ease-out),
+    height 380ms var(--ease-out);
 }
 
 .render-hero__progress--active {
+  height: 2.35rem;
   opacity: 1;
 }
 
 .render-hero__progress-track {
   position: relative;
   width: 100%;
-  height: 100%;
-  border-radius: 999px;
+  height: 2.35rem;
+  border-radius: 14px;
   overflow: hidden;
   isolation: isolate;
   background:
     linear-gradient(
-      90deg,
-      rgba(255, 45, 85, 0.06) 0%,
-      rgba(255, 255, 255, 0.07) 50%,
-      rgba(255, 45, 85, 0.06) 100%
-    );
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      180deg,
+      rgba(255, 255, 255, 0.04),
+      rgba(0, 0, 0, 0.22)
+    ),
+    rgba(255, 45, 85, 0.06);
+  border: 1px solid rgba(255, 45, 85, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 18px rgba(255, 45, 85, 0.12);
 }
 
 .render-hero__wave {
@@ -3172,25 +3263,25 @@ select.field__input option {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 45, 85, 0.18) 18%,
-    rgba(255, 90, 120, 0.12) 42%,
-    rgba(255, 45, 85, 0.22) 58%,
-    rgba(255, 120, 150, 0.1) 78%,
+    rgba(255, 45, 85, 0.22) 18%,
+    rgba(255, 120, 150, 0.12) 42%,
+    rgba(255, 45, 85, 0.28) 58%,
+    rgba(255, 90, 120, 0.12) 78%,
     transparent 100%
   );
   background-size: 220% 100%;
-  animation: wave-drift 3.6s linear infinite;
-  opacity: 0.7;
+  animation: wave-drift 2.4s linear infinite;
+  opacity: 0.85;
 }
 
 .render-hero__meter {
   position: absolute;
   inset: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  padding: 0 0.35rem;
-  gap: 0.12rem;
+  padding: 0.35rem 0.45rem;
+  gap: 0.1rem;
   z-index: 1;
 }
 
@@ -3198,13 +3289,14 @@ select.field__input option {
   --tick: 0;
   flex: 1 1 0;
   max-width: 3px;
-  height: 55%;
+  height: 78%;
   border-radius: 999px;
-  background: rgba(255, 45, 85, 0.55);
-  transform-origin: center;
-  animation: meter-pulse 1.35s var(--ease-out) infinite;
-  animation-delay: calc(var(--tick) * -0.07s);
-  opacity: 0.45;
+  background: linear-gradient(180deg, #ff8aa0, var(--accent));
+  transform-origin: bottom center;
+  animation: meter-pulse 0.95s var(--ease-out) infinite;
+  animation-delay: calc(var(--tick) * -0.045s);
+  opacity: 0.55;
+  box-shadow: 0 0 6px rgba(255, 45, 85, 0.35);
 }
 
 .render-hero__pulse {
@@ -3212,21 +3304,21 @@ select.field__input option {
   top: 0;
   bottom: 0;
   left: 0;
-  width: 38%;
+  width: 34%;
   z-index: 2;
   border-radius: inherit;
   background: linear-gradient(
     90deg,
     rgba(255, 45, 85, 0) 0%,
-    rgba(255, 45, 85, 0.18) 22%,
-    rgba(255, 255, 255, 0.55) 48%,
+    rgba(255, 45, 85, 0.12) 22%,
+    rgba(255, 255, 255, 0.5) 48%,
     rgba(255, 45, 85, 0.95) 58%,
-    rgba(255, 90, 120, 0.35) 78%,
-    rgba(255, 45, 85, 0) 100%
+    rgba(255, 90, 120, 0.3) 78%,
+    transparent 100%
   );
-  animation: signal-sweep 2.4s cubic-bezier(0.45, 0.05, 0.2, 1) infinite;
-  will-change: transform;
-  transform: translateX(-105%);
+  filter: blur(0.3px);
+  animation: signal-sweep 1.7s cubic-bezier(0.45, 0.05, 0.2, 1) infinite;
+  mix-blend-mode: screen;
 }
 
 .render-hero--queued .render-hero__meter-tick {
@@ -3323,14 +3415,15 @@ select.field__input option {
 
 .page--render-focus .render-hero__card {
   min-height: 0;
-  padding-block: 0.95rem 1rem;
+  padding: 1.15rem 1.1rem 1.05rem;
+  gap: 0.85rem;
 }
 
 .page--render-focus .render-hero__mark {
-  width: 4.5rem;
-  height: 4.5rem;
-  min-height: 4.5rem;
-  margin-bottom: 0.55rem;
+  width: 6.25rem;
+  height: 6.25rem;
+  min-height: 6.25rem;
+  margin: 0;
 }
 
 .panel--symmetric {
@@ -3816,10 +3909,38 @@ select.field__input option {
 @keyframes eq-tall {
   0%,
   100% {
-    transform: scaleY(0.18);
+    transform: scaleY(0.12);
+    opacity: 0.55;
+  }
+  35% {
+    transform: scaleY(1.05);
+    opacity: 1;
+  }
+  55% {
+    transform: scaleY(0.45);
+    opacity: 0.75;
+  }
+  75% {
+    transform: scaleY(0.88);
+    opacity: 0.95;
+  }
+}
+
+@keyframes platter-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes platter-core-pulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+    box-shadow: 0 0 10px rgba(255, 45, 85, 0.55);
   }
   50% {
-    transform: scaleY(1);
+    transform: scale(1.08);
+    box-shadow: 0 0 20px rgba(255, 45, 85, 0.95);
   }
 }
 
@@ -3877,16 +3998,20 @@ select.field__input option {
 @keyframes meter-pulse {
   0%,
   100% {
-    transform: scaleY(0.35);
-    opacity: 0.28;
+    transform: scaleY(0.22);
+    opacity: 0.3;
   }
-  40% {
+  30% {
     transform: scaleY(1);
-    opacity: 0.9;
+    opacity: 1;
   }
-  70% {
-    transform: scaleY(0.55);
+  55% {
+    transform: scaleY(0.4);
     opacity: 0.5;
+  }
+  78% {
+    transform: scaleY(0.82);
+    opacity: 0.85;
   }
 }
 
@@ -4677,6 +4802,12 @@ select.field__input option {
 
   .render-hero__bar {
     transform: none;
+  }
+
+  .render-hero__platter-disc,
+  .render-hero__platter-groove,
+  .render-hero__platter-core {
+    animation: none !important;
   }
 
   .home-masthead__dj,

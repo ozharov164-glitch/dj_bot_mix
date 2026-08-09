@@ -8,8 +8,8 @@ type RenderStatusHeroProps = {
   detail?: string | null;
 };
 
-const BAR_HEIGHTS = [40, 70, 50, 90, 100, 80, 60, 75, 35];
-const METER_TICKS = 28;
+const BAR_HEIGHTS = [28, 48, 62, 78, 95, 100, 88, 70, 55, 42, 30];
+const METER_TICKS = 36;
 const MORPH_MS = 560;
 
 type Snapshot = {
@@ -23,7 +23,10 @@ function StatusMark({ status }: { status: RenderJobStatus }) {
   switch (status) {
     case "RUNNING":
       return (
-        <>
+        <span className="render-hero__platter">
+          <span className="render-hero__platter-disc" />
+          <span className="render-hero__platter-groove" />
+          <span className="render-hero__platter-core" />
           <span className="render-hero__ring render-hero__ring--1" />
           <span className="render-hero__ring render-hero__ring--2" />
           <span className="render-hero__ring render-hero__ring--3" />
@@ -38,11 +41,11 @@ function StatusMark({ status }: { status: RenderJobStatus }) {
               <span
                 key={i}
                 className="render-hero__bar"
-                style={{ height: `${h}%` }}
+                style={{ "--bar-h": `${h}%` } as CSSProperties}
               />
             ))}
           </span>
-        </>
+        </span>
       );
     case "QUEUED":
       return (
