@@ -61,19 +61,41 @@ export function hapticSelection(): void {
 export function openBotChat(): void {
   const url = `https://t.me/${FADELINE_BOT_USERNAME}`;
   const webApp = getTelegramWebApp();
+
+  // Inside Mini App WebView, window.open is often blocked — use Telegram APIs.
   try {
-    if (webApp?.openTelegramLink) {
+    if (typeof webApp?.openTelegramLink === "function") {
       webApp.openTelegramLink(url);
-      return;
-    }
-    if (webApp?.openLink) {
-      webApp.openLink(url);
+      // Some mobile clients keep the Mini App covering the chat; close so
+      // the bot conversation (with the delivered file) becomes visible.
+      window.setTimeout(() => {
+        try {
+          webApp.close?.();
+        } catch {
+          // ignore
+        }
+      }, 40);
       return;
     }
   } catch {
     // fall through
   }
-  window.open(url, "_blank", "noopener,noreferrer");
+
+  try {
+    if (typeof webApp?.openLink === "function") {
+      webApp.openLink(url, { try_instant_view: false });
+      return;
+    }
+  } catch {
+    // fall through
+  }
+
+  // Last resort: same-frame navigation (window.open is blocked in TG WebView).
+  try {
+    window.location.assign(url);
+  } catch {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
 }
 
 /**

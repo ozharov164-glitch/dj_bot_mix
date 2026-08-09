@@ -22,7 +22,7 @@ type CardStageProps = {
 
 const TRANSITION_MS = 560;
 /** Keep stage compact — avoids a tall locked viewport with dead space. */
-const STAGE_MAX_PX = 232;
+const STAGE_MAX_PX = 184;
 
 function resolveDirection(
   from: number,

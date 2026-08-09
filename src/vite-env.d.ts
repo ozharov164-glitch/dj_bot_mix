@@ -41,6 +41,7 @@ interface TelegramWebApp {
   setBackgroundColor?: (color: string) => void;
   openTelegramLink?: (url: string) => void;
   openLink?: (url: string, options?: { try_instant_view?: boolean }) => void;
+  close?: () => void;
   requestFullscreen?: () => void;
   exitFullscreen?: () => void;
   isFullscreen?: boolean;

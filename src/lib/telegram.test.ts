@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { prepareTelegramViewport } from "./telegram";
+import { openBotChat, prepareTelegramViewport } from "./telegram";
 
 describe("prepareTelegramViewport", () => {
   afterEach(() => {
@@ -34,5 +34,50 @@ describe("prepareTelegramViewport", () => {
     expect(setBackgroundColor).toHaveBeenCalledWith("#07090C");
     expect(disableVerticalSwipes).toHaveBeenCalled();
     expect(requestFullscreen).not.toHaveBeenCalled();
+  });
+});
+
+describe("openBotChat", () => {
+  afterEach(() => {
+    delete window.Telegram;
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("opens t.me via openTelegramLink and closes the Mini App", () => {
+    vi.useFakeTimers();
+    const openTelegramLink = vi.fn();
+    const close = vi.fn();
+    window.Telegram = {
+      WebApp: {
+        ready: vi.fn(),
+        expand: vi.fn(),
+        openTelegramLink,
+        close,
+      },
+    };
+
+    openBotChat();
+
+    expect(openTelegramLink).toHaveBeenCalledWith("https://t.me/fadeline_bot");
+    expect(close).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(50);
+    expect(close).toHaveBeenCalled();
+  });
+
+  it("falls back to location.assign when Telegram link APIs are missing", () => {
+    const assign = vi.fn();
+    vi.stubGlobal("location", { assign });
+    window.Telegram = {
+      WebApp: {
+        ready: vi.fn(),
+        expand: vi.fn(),
+      },
+    };
+
+    openBotChat();
+
+    expect(assign).toHaveBeenCalledWith("https://t.me/fadeline_bot");
   });
 });
