@@ -39,6 +39,14 @@ interface TelegramWebApp {
   themeParams?: Record<string, string>;
   setHeaderColor?: (color: string) => void;
   setBackgroundColor?: (color: string) => void;
+  openTelegramLink?: (url: string) => void;
+  openLink?: (url: string, options?: { try_instant_view?: boolean }) => void;
+  requestFullscreen?: () => void;
+  exitFullscreen?: () => void;
+  isFullscreen?: boolean;
+  isExpanded?: boolean;
+  disableVerticalSwipes?: () => void;
+  enableVerticalSwipes?: () => void;
   HapticFeedback?: TelegramHapticFeedback;
   BackButton?: TelegramBackButton;
 }

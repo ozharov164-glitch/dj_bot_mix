@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ApiError,
   deleteProject,
-  listProjects,
   type Project,
 } from "../api/client";
+import { useAppData } from "../boot/AppDataProvider";
 import { Button } from "../components/Button";
 import { BrandMark } from "../components/BrandMark";
 import { ErrorBanner } from "../components/ErrorBanner";
@@ -14,7 +14,9 @@ import {
   IconPlus,
   IconTrash,
 } from "../components/icons";
-import { SkeletonList } from "../components/SkeletonList";
+import {
+  partitionActiveProjects,
+} from "../lib/projects-list";
 import { formatFileCount } from "../lib/plural";
 import { hapticImpact } from "../lib/telegram";
 
@@ -22,6 +24,8 @@ type ProjectsPageProps = {
   onCreate: () => void;
   onOpen: (projectId: string) => void;
 };
+
+export { isStaleProject, partitionActiveProjects } from "../lib/projects-list";
 
 function projectTypeLabel(type: Project["type"]): string {
   switch (type) {
@@ -90,39 +94,87 @@ function statusChipClass(status: Project["status"]): string {
   }
 }
 
+function ProjectCard({
+  project,
+  deleting,
+  onOpen,
+  onDelete,
+}: {
+  project: Project;
+  deleting: boolean;
+  onOpen: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <li className="project-card">
+      <button
+        type="button"
+        className="project-card__open"
+        onClick={() => {
+          hapticImpact("light");
+          onOpen(project.id);
+        }}
+      >
+        <span
+          className={
+            project.type === "MIX"
+              ? "project-card__mark"
+              : "project-card__mark project-card__mark--effect"
+          }
+          aria-hidden="true"
+        >
+          {project.type === "MIX" ? (
+            <IconMixMark size={20} />
+          ) : (
+            <IconFxMark size={20} />
+          )}
+        </span>
+        <span className="project-card__body">
+          <span className="project-card__title">{project.title}</span>
+          <span className="project-card__meta-row">
+            <span className="project-card__type">
+              {projectTypeLabel(project.type)}
+            </span>
+            <span className={statusChipClass(project.status)}>
+              {statusLabel(project.status)}
+            </span>
+          </span>
+          <span className="project-card__files">
+            {formatFileCount(project.files.length)}
+          </span>
+        </span>
+      </button>
+      <div className="project-card__tools">
+        <Button
+          variant="icon"
+          className="btn--icon-danger"
+          disabled={deleting}
+          onClick={() => onDelete(project.id)}
+          aria-label={`Удалить проект ${project.title}`}
+        >
+          <IconTrash size={15} />
+        </Button>
+      </div>
+    </li>
+  );
+}
+
 export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { projects, removeProject } = useAppData();
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await listProjects();
-      setProjects(data.items);
-    } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "Не удалось загрузить проекты",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const { mixes, singles } = useMemo(
+    () => partitionActiveProjects(projects),
+    [projects],
+  );
 
   async function handleDelete(projectId: string) {
     if (!window.confirm("Удалить проект и все файлы?")) return;
     setDeletingId(projectId);
     try {
       await deleteProject(projectId);
-      setProjects((prev) => prev.filter((p) => p.id !== projectId));
+      removeProject(projectId);
       hapticImpact("medium");
     } catch (err) {
       setError(
@@ -132,6 +184,8 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
       setDeletingId(null);
     }
   }
+
+  const hasProjects = mixes.length > 0 || singles.length > 0;
 
   return (
     <main className="page">
@@ -145,11 +199,11 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
         </div>
       </header>
 
-      {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
+      {error ? (
+        <ErrorBanner message={error} onRetry={() => setError(null)} />
+      ) : null}
 
-      {loading ? (
-        <SkeletonList count={3} />
-      ) : projects.length === 0 ? (
+      {!hasProjects ? (
         <section className="panel panel--empty">
           <div className="empty-icon" aria-hidden="true">
             <IconMixMark size={32} />
@@ -171,61 +225,47 @@ export function ProjectsPage({ onCreate, onOpen }: ProjectsPageProps) {
           </Button>
         </section>
       ) : (
-        <ul className="project-cards">
-          {projects.map((project) => (
-            <li key={project.id} className="project-card">
-              <button
-                type="button"
-                className="project-card__open"
-                onClick={() => {
-                  hapticImpact("light");
-                  onOpen(project.id);
-                }}
-              >
-                <span
-                  className={
-                    project.type === "MIX"
-                      ? "project-card__mark"
-                      : "project-card__mark project-card__mark--effect"
-                  }
-                  aria-hidden="true"
-                >
-                  {project.type === "MIX" ? (
-                    <IconMixMark size={20} />
-                  ) : (
-                    <IconFxMark size={20} />
-                  )}
-                </span>
-                <span className="project-card__body">
-                  <span className="project-card__title">{project.title}</span>
-                  <span className="project-card__meta-row">
-                    <span className="project-card__type">
-                      {projectTypeLabel(project.type)}
-                    </span>
-                    <span className={statusChipClass(project.status)}>
-                      {statusLabel(project.status)}
-                    </span>
-                  </span>
-                  <span className="project-card__files">
-                    {formatFileCount(project.files.length)}
-                  </span>
-                </span>
-              </button>
-              <div className="project-card__tools">
-                <Button
-                  variant="icon"
-                  className="btn--icon-danger"
-                  disabled={deletingId === project.id}
-                  onClick={() => void handleDelete(project.id)}
-                  aria-label={`Удалить проект ${project.title}`}
-                >
-                  <IconTrash size={15} />
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="project-sections">
+          {mixes.length > 0 ? (
+            <section className="project-section" aria-label="Миксы">
+              <h2 className="project-section__title">Миксы</h2>
+              <ul className="project-cards">
+                {mixes.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    deleting={deletingId === project.id}
+                    onOpen={onOpen}
+                    onDelete={(id) => void handleDelete(id)}
+                  />
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+          {singles.length > 0 ? (
+            <section className="project-section" aria-label="Один трек">
+              <h2 className="project-section__title">Один трек</h2>
+              <ul className="project-cards">
+                {singles.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    deleting={deletingId === project.id}
+                    onOpen={onOpen}
+                    onDelete={(id) => void handleDelete(id)}
+                  />
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </div>
       )}
+
+      <p className="projects-footnote">
+        Готовые файлы приходят в чат с ботом и на сервере не хранятся. Не
+        удаляйте переписку с @fadeline_bot — иначе потеряете результаты.
+      </p>
     </main>
   );
 }

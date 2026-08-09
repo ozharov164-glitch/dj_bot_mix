@@ -20,7 +20,7 @@ import { Button } from "../components/Button";
 import { CardStage, type StageCard } from "../components/CardStage";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { FlowBreadcrumb } from "../components/FlowBreadcrumb";
-import { IconArrowLeft, IconSpark, IconUpload } from "../components/icons";
+import { IconArrowLeft, IconUpload } from "../components/icons";
 import { OptionPicker } from "../components/OptionPicker";
 import { ProgressBar } from "../components/ProgressBar";
 import { RenderStatusHero } from "../components/RenderStatusHero";
@@ -38,7 +38,7 @@ import {
   renderStatusDescription,
   renderStatusTitle,
 } from "../lib/render-status";
-import { hapticImpact, hapticNotification } from "../lib/telegram";
+import { hapticImpact, hapticNotification, openBotChat } from "../lib/telegram";
 import {
   resolveTransitionCatalog,
   transitionEntry,
@@ -479,9 +479,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
       title: "Куда придёт",
       body: (
         <div className="stage-delivery">
-          <span className="stage-delivery__mark" aria-hidden="true">
-            <IconSpark size={22} />
-          </span>
+          <span className="stage-delivery__eyebrow">Доставка</span>
           <strong className="stage-delivery__title">
             {renderJob?.status === "COMPLETED"
               ? "Уже в чате с ботом"
@@ -563,6 +561,19 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
             }
           />
           <CardStage cards={stageCards} autoPlay={jobActive} intervalMs={3200} />
+          {renderJob.status === "COMPLETED" ? (
+            <div className="cta-bar cta-bar--symmetric">
+              <Button
+                fullWidth
+                onClick={() => {
+                  hapticImpact("medium");
+                  openBotChat();
+                }}
+              >
+                Открыть чат с ботом
+              </Button>
+            </div>
+          ) : null}
           {renderJob.status === "FAILED" && renderAvailable ? (
             <div className="cta-bar cta-bar--symmetric">
               <Button
@@ -570,7 +581,6 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
                 disabled={!canRender || rendering}
                 onClick={() => void handleRender()}
               >
-                <IconSpark size={18} />
                 Попробовать снова
               </Button>
             </div>
@@ -593,8 +603,8 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
 
           <section className="section">
             <h2 className="section__title">Треки</h2>
-            <div className="panel panel--raised">
-              <p className="muted">
+            <div className="panel panel--tracks">
+              <p className="muted panel--tracks__hint">
                 {project.type === "SINGLE_EFFECT"
                   ? "Загрузите один аудиофайл, на который у вас есть права."
                   : `Можно выбрать сразу несколько файлов — до ${maxTracks} треков в миксе. Только файлы, на которые у вас есть права.`}
@@ -613,10 +623,11 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
               <Button
                 fullWidth
                 variant="secondary"
+                className="panel--tracks__pick"
                 disabled={!editable || uploadProgress !== null || jobActive}
                 onClick={() => fileInputRef.current?.click()}
               >
-                <IconUpload size={18} />
+                <IconUpload size={16} />
                 {project.type === "MIX" ? "Выбрать файлы" : "Выбрать файл"}
               </Button>
               {uploadProgress !== null && uploadName ? (
@@ -708,14 +719,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
                   disabled={!canRender || rendering || jobActive}
                   onClick={() => void handleRender()}
                 >
-                  {rendering || jobActive ? (
-                    "Обработка…"
-                  ) : (
-                    <>
-                      <IconSpark size={18} />
-                      Обработать
-                    </>
-                  )}
+                  {rendering || jobActive ? "Обработка…" : "Обработать"}
                 </Button>
               ) : (
                 <Button fullWidth disabled title="Обработка пока недоступна">

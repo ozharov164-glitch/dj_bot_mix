@@ -36,17 +36,17 @@ function statusLabel(status: AudioFile["status"]): string {
   }
 }
 
-function statusChipClass(status: AudioFile["status"]): string {
+function statusTone(status: AudioFile["status"]): string {
   switch (status) {
     case "VALIDATED":
-      return "status-chip status-chip--ready";
+      return "track-row__status--ok";
     case "PENDING":
     case "UPLOADED":
-      return "status-chip status-chip--uploading";
+      return "track-row__status--busy";
     case "REJECTED":
     case "EXPIRED":
     case "DELETED":
-      return "status-chip status-chip--failed";
+      return "track-row__status--bad";
     default: {
       const _exhaustive: never = status;
       return _exhaustive;
@@ -75,58 +75,57 @@ export function TrackList({
       {files.map((file, index) => (
         <li
           key={file.id}
-          className={
-            editable ? "track-card track-card--editable" : "track-card"
-          }
+          className={editable ? "track-row track-row--editable" : "track-row"}
         >
-          <div className="track-card__main">
-            <span className="track-card__mark" aria-hidden="true">
-              {index + 1}
-            </span>
-            <div className="track-card__body">
-              <p className="track-card__title" title={file.originalFilename}>
-                {file.originalFilename}
-              </p>
-              <div className="track-card__meta-row">
-                <span className="track-card__meta">
-                  {formatBytes(file.sizeBytes)} ·{" "}
-                  {formatDuration(file.durationSeconds)}
-                </span>
-                <span className={statusChipClass(file.status)}>
-                  {statusLabel(file.status)}
-                </span>
-              </div>
-            </div>
+          <span className="track-row__index" aria-hidden="true">
+            {index + 1}
+          </span>
+
+          <div className="track-row__body">
+            <p className="track-row__title" title={file.originalFilename}>
+              {file.originalFilename}
+            </p>
+            <p className="track-row__meta">
+              <span>
+                {formatBytes(file.sizeBytes)} ·{" "}
+                {formatDuration(file.durationSeconds)}
+              </span>
+              <span className={`track-row__status ${statusTone(file.status)}`}>
+                {statusLabel(file.status)}
+              </span>
+            </p>
           </div>
 
           {editable ? (
-            <div className="track-card__tools">
-              <div className="track-card__reorder" role="group" aria-label="Порядок">
+            <div className="track-row__tools">
+              <div className="track-row__reorder" role="group" aria-label="Порядок">
                 <Button
                   variant="icon"
+                  className="track-row__tool"
                   aria-label="Переместить вверх"
                   disabled={busy || index === 0}
                   onClick={() => onMoveUp(file.id)}
                 >
-                  <IconChevronUp size={16} />
+                  <IconChevronUp size={14} />
                 </Button>
                 <Button
                   variant="icon"
+                  className="track-row__tool"
                   aria-label="Переместить вниз"
                   disabled={busy || index === files.length - 1}
                   onClick={() => onMoveDown(file.id)}
                 >
-                  <IconChevronDown size={16} />
+                  <IconChevronDown size={14} />
                 </Button>
               </div>
               <Button
                 variant="icon"
-                className="btn--icon-danger"
+                className="track-row__tool track-row__tool--danger"
                 aria-label="Удалить трек"
                 disabled={busy}
                 onClick={() => onDelete(file.id)}
               >
-                <IconTrash size={15} />
+                <IconTrash size={14} />
               </Button>
             </div>
           ) : null}

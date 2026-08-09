@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { RenderJobStatus } from "../api/client";
 
 type RenderStatusHeroProps = {
@@ -9,7 +9,8 @@ type RenderStatusHeroProps = {
 };
 
 const BAR_HEIGHTS = [40, 70, 50, 90, 100, 80, 60, 75, 35];
-const MORPH_MS = 480;
+const METER_TICKS = 28;
+const MORPH_MS = 560;
 
 type Snapshot = {
   status: RenderJobStatus;
@@ -129,6 +130,33 @@ function HeroCopy({
   );
 }
 
+function ProgressMeter({ active }: { active: boolean }) {
+  return (
+    <div
+      className={
+        active
+          ? "render-hero__progress render-hero__progress--active"
+          : "render-hero__progress"
+      }
+      aria-hidden="true"
+    >
+      <div className="render-hero__progress-track">
+        <span className="render-hero__wave" />
+        <span className="render-hero__meter">
+          {Array.from({ length: METER_TICKS }, (_, i) => (
+            <span
+              key={i}
+              className="render-hero__meter-tick"
+              style={{ "--tick": String(i) } as CSSProperties}
+            />
+          ))}
+        </span>
+        <span className="render-hero__pulse" />
+      </div>
+    </div>
+  );
+}
+
 export function RenderStatusHero({
   status,
   title,
@@ -140,6 +168,7 @@ export function RenderStatusHero({
   const isDone = status === "COMPLETED";
   const isFailed = status === "FAILED";
   const detailValue = detail ?? null;
+  const progressActive = isRunning || isQueued;
 
   const currentRef = useRef<Snapshot>({
     status,
@@ -251,13 +280,7 @@ export function RenderStatusHero({
           </div>
         </div>
 
-        {isRunning || isQueued ? (
-          <div className="render-hero__progress render-hero__progress--active" aria-hidden="true">
-            <span className="render-hero__shimmer" />
-          </div>
-        ) : (
-          <div className="render-hero__progress" aria-hidden="true" />
-        )}
+        <ProgressMeter active={progressActive} />
       </div>
     </section>
   );

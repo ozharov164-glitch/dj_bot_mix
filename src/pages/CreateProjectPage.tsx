@@ -3,6 +3,7 @@ import {
   ApiError,
   createProject,
   type OutputFormat,
+  type Project,
   type ProjectType,
   type SingleEffect,
   type TransitionStyle,
@@ -12,7 +13,7 @@ import { Button } from "../components/Button";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { FlowBreadcrumb } from "../components/FlowBreadcrumb";
 import { OptionPicker } from "../components/OptionPicker";
-import { IconArrowLeft, IconSpark } from "../components/icons";
+import { IconArrowLeft } from "../components/icons";
 import { EFFECT_HINTS, EFFECT_LABELS } from "../lib/effect-catalog";
 import { hapticImpact, hapticNotification } from "../lib/telegram";
 import {
@@ -22,7 +23,7 @@ import {
 
 type CreateProjectPageProps = {
   onBack: () => void;
-  onCreated: (projectId: string) => void;
+  onCreated: (project: Project) => void;
 };
 
 export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps) {
@@ -60,7 +61,7 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
           : { transitionStyle }),
       });
       hapticNotification("success");
-      onCreated(project.id);
+      onCreated(project);
     } catch (err) {
       hapticNotification("error");
       setError(
@@ -202,14 +203,7 @@ export function CreateProjectPage({ onBack, onCreated }: CreateProjectPageProps)
           disabled={submitting}
           onClick={() => void handleSubmit()}
         >
-          {submitting ? (
-            "Создаём…"
-          ) : (
-            <>
-              <IconSpark size={18} />
-              Создать и добавить файлы
-            </>
-          )}
+          {submitting ? "Создаём…" : "Создать и добавить файлы"}
         </Button>
       </div>
     </main>

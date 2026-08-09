@@ -23,6 +23,7 @@ import {
   isLocalCursorPreview,
   previewAuth,
 } from "../dev/local-preview";
+import { prepareTelegramViewport } from "../lib/telegram";
 
 export type AuthStatus =
   | "checking"
@@ -109,17 +110,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    prepareTelegramViewport();
     const webApp = window.Telegram?.WebApp;
     if (webApp) {
-      webApp.ready();
-      webApp.expand();
-      // Keep Telegram chrome dark even when the client theme is light.
-      try {
-        webApp.setHeaderColor?.("#07090C");
-        webApp.setBackgroundColor?.("#07090C");
-      } catch {
-        // Older Telegram clients may not support these helpers.
-      }
       setColorScheme(webApp.colorScheme ?? "dark");
     }
 

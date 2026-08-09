@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
+import { AppDataProvider, useAppData } from "./boot/AppDataProvider";
 import { AppDock } from "./components/AppDock";
 import { BrandMark } from "./components/BrandMark";
 import { ErrorBanner } from "./components/ErrorBanner";
@@ -37,8 +38,31 @@ function routeKey(route: Route): string {
   }
 }
 
+function ShellFrame({
+  children,
+  withDock = false,
+}: {
+  children: ReactNode;
+  withDock?: boolean;
+}) {
+  return (
+    <div
+      className={`${SHELL_CLASS}${withDock ? " shell--with-dock" : ""}`}
+      data-testid="mixflow-shell"
+    >
+      <div className="shell-atmosphere" aria-hidden="true">
+        <span className="shell-blob shell-blob--a" />
+        <span className="shell-blob shell-blob--b" />
+        <span className="shell-blob shell-blob--c" />
+      </div>
+      {children}
+    </div>
+  );
+}
+
 function AppShell() {
   const { status, consent, error, retry } = useAuth();
+  const { bootStatus, bootError, retryBoot, upsertProject } = useAppData();
   const [onboardingDone, setOnboardingDone] = useState(() =>
     isLocalCursorPreview(),
   );
@@ -54,7 +78,10 @@ function AppShell() {
   }, []);
 
   const showChrome =
-    status === "ready" && Boolean(consent?.accepted) && onboardingDone;
+    status === "ready" &&
+    Boolean(consent?.accepted) &&
+    onboardingDone &&
+    bootStatus === "ready";
   const showBack = showChrome && route.name !== "projects";
   const withDock =
     showChrome && (route.name === "projects" || route.name === "create");
@@ -70,11 +97,7 @@ function AppShell() {
 
   if (status === "checking" || status === "authenticating") {
     return (
-      <div className={SHELL_CLASS} data-testid="mixflow-shell">
-        <div className="shell-atmosphere" aria-hidden="true">
-          <span className="shell-blob shell-blob--a" />
-          <span className="shell-blob shell-blob--b" />
-        </div>
+      <ShellFrame>
         <LoadingPage
           message={
             status === "authenticating"
@@ -82,29 +105,21 @@ function AppShell() {
               : "Загрузка…"
           }
         />
-      </div>
+      </ShellFrame>
     );
   }
 
   if (status === "outside") {
     return (
-      <div className={SHELL_CLASS} data-testid="mixflow-shell">
-        <div className="shell-atmosphere" aria-hidden="true">
-          <span className="shell-blob shell-blob--a" />
-          <span className="shell-blob shell-blob--b" />
-        </div>
+      <ShellFrame>
         <OutsideTelegramPage />
-      </div>
+      </ShellFrame>
     );
   }
 
   if (status === "error") {
     return (
-      <div className={SHELL_CLASS} data-testid="mixflow-shell">
-        <div className="shell-atmosphere" aria-hidden="true">
-          <span className="shell-blob shell-blob--a" />
-          <span className="shell-blob shell-blob--b" />
-        </div>
+      <ShellFrame>
         <main className="page">
           <header className="hero">
             <BrandMark variant="compact" />
@@ -115,45 +130,56 @@ function AppShell() {
           </header>
           <ErrorBanner message={error ?? "Неизвестная ошибка"} onRetry={retry} />
         </main>
-      </div>
+      </ShellFrame>
     );
   }
 
   if (!consent?.accepted) {
     return (
-      <div className={SHELL_CLASS} data-testid="mixflow-shell">
-        <div className="shell-atmosphere" aria-hidden="true">
-          <span className="shell-blob shell-blob--a" />
-          <span className="shell-blob shell-blob--b" />
-        </div>
+      <ShellFrame>
         <ConsentPage />
-      </div>
+      </ShellFrame>
     );
   }
 
   if (!onboardingDone) {
     return (
-      <div className={SHELL_CLASS} data-testid="mixflow-shell">
-        <div className="shell-atmosphere" aria-hidden="true">
-          <span className="shell-blob shell-blob--a" />
-          <span className="shell-blob shell-blob--b" />
-        </div>
+      <ShellFrame>
         <OnboardingPage onContinue={() => setOnboardingDone(true)} />
-      </div>
+      </ShellFrame>
+    );
+  }
+
+  if (bootStatus === "idle" || bootStatus === "loading") {
+    return (
+      <ShellFrame>
+        <LoadingPage message="Готовим студию…" />
+      </ShellFrame>
+    );
+  }
+
+  if (bootStatus === "error") {
+    return (
+      <ShellFrame>
+        <main className="page">
+          <header className="hero">
+            <BrandMark variant="compact" />
+            <h1>Не удалось загрузить</h1>
+            <p className="lead">
+              Проекты и настройки не подтянулись. Попробуйте ещё раз.
+            </p>
+          </header>
+          <ErrorBanner
+            message={bootError ?? "Ошибка загрузки"}
+            onRetry={retryBoot}
+          />
+        </main>
+      </ShellFrame>
     );
   }
 
   return (
-    <div
-      className={`${SHELL_CLASS}${withDock ? " shell--with-dock" : ""}`}
-      data-testid="mixflow-shell"
-    >
-      <div className="shell-atmosphere" aria-hidden="true">
-        <span className="shell-blob shell-blob--a" />
-        <span className="shell-blob shell-blob--b" />
-        <span className="shell-blob shell-blob--c" />
-      </div>
-
+    <ShellFrame withDock={withDock}>
       <PageStage routeKey={routeKey(route)} direction={direction}>
         {route.name === "projects" ? (
           <ProjectsPage
@@ -164,7 +190,10 @@ function AppShell() {
         {route.name === "create" ? (
           <CreateProjectPage
             onBack={() => navigate({ name: "projects" }, "back")}
-            onCreated={(id) => navigate({ name: "project", id }, "forward")}
+            onCreated={(project) => {
+              upsertProject(project);
+              navigate({ name: "project", id: project.id }, "forward");
+            }}
           />
         ) : null}
         {route.name === "project" ? (
@@ -190,14 +219,16 @@ function AppShell() {
           }}
         />
       ) : null}
-    </div>
+    </ShellFrame>
   );
 }
 
 export function App() {
   return (
     <AuthProvider>
-      <AppShell />
+      <AppDataProvider>
+        <AppShell />
+      </AppDataProvider>
     </AuthProvider>
   );
 }

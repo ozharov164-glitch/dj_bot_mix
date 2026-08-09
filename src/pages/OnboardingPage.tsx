@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "../components/Button";
 import { BrandMark } from "../components/BrandMark";
-import { IconStartSpark } from "../components/icons";
 import { useAuth } from "../auth/AuthProvider";
 import { PUBLIC_LIMITS } from "../config/public-limits";
 import { hapticImpact } from "../lib/telegram";
@@ -135,11 +134,7 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
           onContinue();
         }}
       >
-        <span className="onboarding__start-spark" aria-hidden="true">
-          <IconStartSpark size={26} className="onboarding__start-spark-icon" />
-        </span>
-        <span className="onboarding__start-label">Начать</span>
-        <span aria-hidden="true" />
+        Начать
       </Button>
     </main>
   );

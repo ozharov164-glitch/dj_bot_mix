@@ -1,7 +1,20 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { CardStage } from "./CardStage";
+
+function viewportOf(container: HTMLElement) {
+  const viewport = container.querySelector(".card-stage__viewport");
+  expect(viewport).not.toBeNull();
+  return viewport as HTMLElement;
+}
 
 describe("CardStage", () => {
   afterEach(() => {
@@ -10,7 +23,7 @@ describe("CardStage", () => {
   });
 
   it("shows one card and switches without stacking siblings", () => {
-    render(
+    const { container } = render(
       <CardStage
         cards={[
           { id: "a", title: "Статус", body: "В очереди" },
@@ -19,17 +32,18 @@ describe("CardStage", () => {
       />,
     );
 
-    expect(screen.getByText("Статус")).toBeInTheDocument();
-    expect(screen.queryByText("Треки")).not.toBeInTheDocument();
+    const viewport = viewportOf(container);
+    expect(within(viewport).getByText("Статус")).toBeInTheDocument();
+    expect(within(viewport).queryByText("Треки")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Треки" }));
-    expect(screen.getByText("Треки")).toBeInTheDocument();
+    expect(within(viewport).getByText("Треки")).toBeInTheDocument();
     // During crossfade the outgoing slide stays briefly; settle after transition.
-    expect(screen.getAllByText("Статус").length).toBeGreaterThanOrEqual(1);
+    expect(within(viewport).getAllByText("Статус").length).toBeGreaterThanOrEqual(1);
   });
 
   it("settles to a single visible card after transition", async () => {
-    render(
+    const { container } = render(
       <CardStage
         cards={[
           { id: "a", title: "Статус", body: "В очереди" },
@@ -40,15 +54,16 @@ describe("CardStage", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Треки" }));
 
+    const viewport = viewportOf(container);
     await waitFor(() => {
-      expect(screen.queryByText("Статус")).not.toBeInTheDocument();
+      expect(within(viewport).queryByText("Статус")).not.toBeInTheDocument();
     });
-    expect(screen.getByText("Треки")).toBeInTheDocument();
-    expect(screen.getByText("2 файла")).toBeInTheDocument();
-    expect(screen.queryByText("В очереди")).not.toBeInTheDocument();
+    expect(within(viewport).getByText("Треки")).toBeInTheDocument();
+    expect(within(viewport).getByText("2 файла")).toBeInTheDocument();
+    expect(within(viewport).queryByText("В очереди")).not.toBeInTheDocument();
   });
 
-  it("grows with content instead of clipping settings rows", () => {
+  it("locks viewport to tallest card so content is not clipped", () => {
     const { container } = render(
       <CardStage
         cards={[
@@ -75,19 +90,22 @@ describe("CardStage", () => {
               </div>
             ),
           },
+          { id: "tracks", title: "Треки", body: "2 файла" },
         ]}
       />,
     );
 
-    expect(screen.getByText("Медленный реверб")).toBeVisible();
-    expect(screen.getByText("Один трек")).toBeVisible();
-    expect(screen.getByText("MP3")).toBeVisible();
-    expect(screen.getByText("1 файл в проекте")).toBeVisible();
+    const viewport = viewportOf(container);
+    expect(within(viewport).getByText("Медленный реверб")).toBeVisible();
+    expect(within(viewport).getByText("Один трек")).toBeVisible();
+    expect(within(viewport).getByText("MP3")).toBeVisible();
+    expect(within(viewport).getByText("1 файл в проекте")).toBeVisible();
 
-    const viewport = container.querySelector(".card-stage__viewport");
-    const slide = container.querySelector(".card-stage__slide");
-    expect(viewport).not.toBeNull();
+    const slide = viewport.querySelector(".card-stage__slide");
     expect(slide).not.toBeNull();
-    expect(getComputedStyle(slide!).position).not.toBe("absolute");
+    expect(container.querySelector(".card-stage__measure")).not.toBeNull();
+    expect(
+      container.querySelectorAll(".card-stage__measure-slide"),
+    ).toHaveLength(2);
   });
 });

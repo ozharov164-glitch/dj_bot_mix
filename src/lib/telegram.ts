@@ -3,8 +3,39 @@
 export type HapticImpactStyle = "light" | "medium" | "heavy" | "rigid" | "soft";
 export type HapticNotificationType = "error" | "success" | "warning";
 
+/** Public bot username (no @) — delivery archive lives in this chat. */
+export const FADELINE_BOT_USERNAME = "fadeline_bot";
+
 export function getTelegramWebApp(): TelegramWebApp | undefined {
   return window.Telegram?.WebApp;
+}
+
+/** Expand + fullscreen (desktop/Telegram) — fail soft on older clients. */
+export function prepareTelegramViewport(): void {
+  const webApp = getTelegramWebApp();
+  if (!webApp) return;
+  try {
+    webApp.ready();
+    webApp.expand();
+  } catch {
+    // ignore
+  }
+  try {
+    webApp.setHeaderColor?.("#07090C");
+    webApp.setBackgroundColor?.("#07090C");
+  } catch {
+    // ignore
+  }
+  try {
+    webApp.disableVerticalSwipes?.();
+  } catch {
+    // ignore
+  }
+  try {
+    webApp.requestFullscreen?.();
+  } catch {
+    // ignore — not all clients support Bot API 8 fullscreen
+  }
 }
 
 export function hapticImpact(style: HapticImpactStyle = "light"): void {
@@ -29,6 +60,25 @@ export function hapticSelection(): void {
   } catch {
     // ignore
   }
+}
+
+/** Open FADELINE bot chat (cannot deep-link to a specific audio message). */
+export function openBotChat(): void {
+  const url = `https://t.me/${FADELINE_BOT_USERNAME}`;
+  const webApp = getTelegramWebApp();
+  try {
+    if (webApp?.openTelegramLink) {
+      webApp.openTelegramLink(url);
+      return;
+    }
+    if (webApp?.openLink) {
+      webApp.openLink(url);
+      return;
+    }
+  } catch {
+    // fall through
+  }
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
 /**

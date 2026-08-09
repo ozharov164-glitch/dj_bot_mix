@@ -14,10 +14,6 @@ type FlowBreadcrumbProps = {
 
 /** Visual route orientation for multi-step create / project flows. */
 export function FlowBreadcrumb({ steps, trail }: FlowBreadcrumbProps) {
-  const doneCount = steps.filter((s) => s.state === "done").length;
-  const progress =
-    steps.length <= 1 ? 0 : Math.min(1, doneCount / (steps.length - 1));
-
   return (
     <div className="flow-crumb">
       {trail ? <p className="flow-crumb__trail">{trail}</p> : null}
@@ -26,7 +22,6 @@ export function FlowBreadcrumb({ steps, trail }: FlowBreadcrumbProps) {
         aria-label="Этапы"
         style={
           {
-            "--flow-progress": String(progress),
             "--flow-cols": String(Math.max(steps.length, 1)),
           } as CSSProperties
         }
@@ -44,6 +39,16 @@ export function FlowBreadcrumb({ steps, trail }: FlowBreadcrumbProps) {
                 <span className="flow-crumb__n">{index + 1}</span>
               )}
             </span>
+            {index < steps.length - 1 ? (
+              <span
+                className={
+                  step.state === "done"
+                    ? "flow-crumb__connector flow-crumb__connector--done"
+                    : "flow-crumb__connector"
+                }
+                aria-hidden="true"
+              />
+            ) : null}
             <span className="flow-crumb__label">{step.label}</span>
           </li>
         ))}

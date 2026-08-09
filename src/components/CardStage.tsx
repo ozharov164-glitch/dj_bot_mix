@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 
 export type StageCard = {
   id: string;
@@ -13,7 +20,7 @@ type CardStageProps = {
   intervalMs?: number;
 };
 
-const TRANSITION_MS = 420;
+const TRANSITION_MS = 560;
 
 function resolveDirection(
   from: number,
@@ -27,8 +34,8 @@ function resolveDirection(
 }
 
 /**
- * One-at-a-time card stage — true crossfade/slide via grid stack,
- * height grows with content (no fixed overflow clip).
+ * One-at-a-time card stage with locked viewport height (tallest card)
+ * and opacity crossfade — no layout resize jerks between slides.
  */
 export function CardStage({
   cards,
@@ -39,8 +46,10 @@ export function CardStage({
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [exiting, setExiting] = useState<StageCard | null>(null);
   const [animating, setAnimating] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(0);
   const cardsRef = useRef(cards);
   const animatingRef = useRef(false);
+  const measureRef = useRef<HTMLDivElement>(null);
 
   cardsRef.current = cards;
   animatingRef.current = animating;
@@ -48,6 +57,33 @@ export function CardStage({
   const cardKey = cards.map((c) => c.id).join("|");
   const safeIndex = cards.length === 0 ? 0 : index % cards.length;
   const active = cards[safeIndex];
+
+  useLayoutEffect(() => {
+    const root = measureRef.current;
+    if (!root) return;
+
+    const measure = () => {
+      const slides = root.querySelectorAll<HTMLElement>(".card-stage__measure-slide");
+      let max = 0;
+      for (const slide of slides) {
+        max = Math.max(max, slide.offsetHeight);
+      }
+      if (max > 0) {
+        setViewportHeight(max);
+      }
+    };
+
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+    const ro = new ResizeObserver(measure);
+    ro.observe(root);
+    for (const slide of root.querySelectorAll(".card-stage__measure-slide")) {
+      ro.observe(slide);
+    }
+    return () => ro.disconnect();
+  }, [cardKey]);
 
   useEffect(() => {
     setIndex(0);
@@ -97,9 +133,27 @@ export function CardStage({
     setIndex(next);
   }
 
+  const viewportStyle =
+    viewportHeight > 0
+      ? ({ "--stage-h": `${viewportHeight}px` } as CSSProperties)
+      : undefined;
+
   return (
     <div className="card-stage" aria-roledescription="carousel">
-      <div className="card-stage__viewport">
+      <div
+        ref={measureRef}
+        className="card-stage__measure"
+        aria-hidden="true"
+      >
+        {cards.map((card) => (
+          <article key={card.id} className="card-stage__measure-slide">
+            <p className="card-stage__eyebrow">{card.title}</p>
+            <div className="card-stage__body">{card.body}</div>
+          </article>
+        ))}
+      </div>
+
+      <div className="card-stage__viewport" style={viewportStyle}>
         {exiting ? (
           <article
             key={`exit-${exiting.id}`}

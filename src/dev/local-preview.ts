@@ -325,7 +325,7 @@ export function previewEnqueueRender(projectId: string): RenderJob {
     jobs.set(projectId, completed);
     const p = projects.find((x) => x.id === projectId);
     if (p) replaceProject({ ...p, status: "COMPLETED", updatedAt: nowIso() });
-  }, 1800);
+  }, 4200);
 
   return structuredClone(job);
 }

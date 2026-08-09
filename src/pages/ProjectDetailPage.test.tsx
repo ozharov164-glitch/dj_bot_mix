@@ -154,7 +154,9 @@ describe("ProjectDetailPage render UX", () => {
     render(<ProjectDetailPage projectId={baseProject().id} onBack={() => {}} />);
 
     expect(await screen.findByRole("heading", { name: "Готово" })).toBeInTheDocument();
-    expect(screen.getByText(/в чате с ботом/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Открыть чат с ботом" }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /Скачать/i }),
     ).not.toBeInTheDocument();
