@@ -1,3 +1,5 @@
+import signalMark from "../assets/brand/fadeline-signal-v1.png";
+
 type BrandMarkProps = {
   /** hero = large centered; compact = small header; row = side-by-side */
   variant?: "hero" | "compact" | "row";
@@ -8,7 +10,7 @@ type BrandMarkProps = {
   animated?: boolean;
 };
 
-/** Premium FADELINE mark — SVG waveform glyph + wordmark. No bitmap assets. */
+/** Premium FADELINE mark — one reusable raster signal asset + wordmark. */
 export function BrandMark({
   variant = "compact",
   className = "",
@@ -31,28 +33,7 @@ export function BrandMark({
       {showGlyph ? (
         <div className="brand-mark__glyph" aria-hidden="true">
           <span className="brand-mark__glow" />
-          <svg
-            className="brand-mark__svg"
-            viewBox="0 0 48 48"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect
-              x="1.5"
-              y="1.5"
-              width="45"
-              height="45"
-              rx="13"
-              className="brand-mark__plate"
-            />
-            <g className="brand-mark__eq">
-              <rect className="brand-mark__bar" x="12" y="20" width="3" height="12" rx="1.5" />
-              <rect className="brand-mark__bar" x="18" y="14" width="3" height="20" rx="1.5" />
-              <rect className="brand-mark__bar" x="24" y="10" width="3" height="28" rx="1.5" />
-              <rect className="brand-mark__bar" x="30" y="15" width="3" height="18" rx="1.5" />
-              <rect className="brand-mark__bar" x="36" y="19" width="3" height="14" rx="1.5" />
-            </g>
-          </svg>
+          <img className="brand-mark__image" src={signalMark} alt="" />
         </div>
       ) : null}
       <div className="brand-mark__text">

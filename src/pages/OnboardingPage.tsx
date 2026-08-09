@@ -5,7 +5,6 @@ import { useAuth } from "../auth/AuthProvider";
 import { PUBLIC_LIMITS } from "../config/public-limits";
 import { hapticImpact } from "../lib/telegram";
 import type { LegalDocId } from "../legal/docs";
-import { IconSpark } from "../components/icons";
 import { LegalPage } from "./LegalPage";
 
 type OnboardingPageProps = {
@@ -129,13 +128,15 @@ export function OnboardingPage({ onContinue }: OnboardingPageProps) {
 
       <Button
         fullWidth
+        className="onboarding__start"
         onClick={() => {
           hapticImpact("medium");
           onContinue();
         }}
       >
-        <IconSpark size={18} />
-        Начать
+        <span className="onboarding__start-spark" aria-hidden="true">✦</span>
+        <span>Начать</span>
+        <span aria-hidden="true" />
       </Button>
     </main>
   );

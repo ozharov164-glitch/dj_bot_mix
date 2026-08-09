@@ -9,7 +9,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { hapticImpact, hapticSelection } from "../lib/telegram";
-import { IconChevronDown } from "./icons";
+import { IconChevronDown, IconSpark } from "./icons";
 
 export type OptionPickerItem = {
   value: string;
@@ -221,20 +221,7 @@ export function OptionPicker({
                     <span className="option-menu__label">{option.label}</span>
                     {isSelected ? (
                       <span className="option-menu__check" aria-hidden="true">
-                        <svg
-                          viewBox="0 0 20 20"
-                          width="16"
-                          height="16"
-                          fill="none"
-                        >
-                          <path
-                            d="M4.5 10.5 8.2 14l7.3-8"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
+                        <IconSpark size={16} />
                       </span>
                     ) : null}
                   </button>
