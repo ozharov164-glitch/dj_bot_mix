@@ -138,15 +138,7 @@ function AppShell() {
     );
   }
 
-  // 1) Marketing open splash first (auth continues underneath).
-  if (!splashDone) {
-    return (
-      <ShellFrame>
-        <StudioSplash />
-      </ShellFrame>
-    );
-  }
-
+  // Auth failure surfaces immediately — never hide retry behind the splash.
   if (status === "error") {
     return (
       <ShellFrame>
@@ -160,6 +152,15 @@ function AppShell() {
           </header>
           <ErrorBanner message={error ?? "Неизвестная ошибка"} onRetry={retry} />
         </main>
+      </ShellFrame>
+    );
+  }
+
+  // 1) Marketing open splash first (auth continues underneath).
+  if (!splashDone) {
+    return (
+      <ShellFrame>
+        <StudioSplash />
       </ShellFrame>
     );
   }
