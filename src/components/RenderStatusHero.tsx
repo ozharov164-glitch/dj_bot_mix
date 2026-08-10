@@ -8,8 +8,9 @@ type RenderStatusHeroProps = {
   detail?: string | null;
 };
 
-const BAR_HEIGHTS = [28, 48, 62, 78, 95, 100, 88, 70, 55, 42, 30];
 const METER_TICKS = 36;
+const AURORA_TICKS = 48;
+const AURORA_BEADS = 6;
 const MORPH_MS = 560;
 
 type Snapshot = {
@@ -23,25 +24,84 @@ function StatusMark({ status }: { status: RenderJobStatus }) {
   switch (status) {
     case "RUNNING":
       return (
-        <span className="render-hero__platter">
-          <span className="render-hero__platter-disc" />
-          <span className="render-hero__platter-groove" />
-          <span className="render-hero__platter-core" />
-          <span className="render-hero__ring render-hero__ring--1" />
-          <span className="render-hero__ring render-hero__ring--2" />
-          <span className="render-hero__ring render-hero__ring--3" />
-          <span className="render-hero__arc" />
-          <span className="render-hero__particles">
-            {Array.from({ length: 8 }, (_, i) => (
-              <span key={i} className="render-hero__particle" />
-            ))}
-          </span>
-          <span className="render-hero__bars">
-            {BAR_HEIGHTS.map((h, i) => (
+        <span className="render-hero__aurora">
+          <span className="render-hero__aurora-bloom" />
+          <span className="render-hero__aurora-glass" />
+          <span className="render-hero__aurora-mesh" />
+          <span className="render-hero__aurora-ripple render-hero__aurora-ripple--1" />
+          <span className="render-hero__aurora-ripple render-hero__aurora-ripple--2" />
+          <span className="render-hero__aurora-ripple render-hero__aurora-ripple--3" />
+          <svg
+            className="render-hero__aurora-orbit render-hero__aurora-orbit--a"
+            viewBox="0 0 100 100"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              stroke="url(#aurora-orbit-grad)"
+              strokeDasharray="68 220"
+              strokeLinecap="round"
+              strokeWidth="1.6"
+            />
+            <defs>
+              <linearGradient
+                id="aurora-orbit-grad"
+                x1="0"
+                y1="0"
+                x2="100"
+                y2="100"
+              >
+                <stop offset="0%" stopColor="#fff" stopOpacity="0.95" />
+                <stop offset="55%" stopColor="#ff2d55" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#ff2d55" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <svg
+            className="render-hero__aurora-orbit render-hero__aurora-orbit--b"
+            viewBox="0 0 100 100"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle
+              cx="50"
+              cy="50"
+              r="36"
+              stroke="currentColor"
+              strokeDasharray="42 210"
+              strokeLinecap="round"
+              strokeWidth="1.25"
+              opacity="0.55"
+            />
+          </svg>
+          <span className="render-hero__aurora-ticks" aria-hidden="true">
+            {Array.from({ length: AURORA_TICKS }, (_, i) => (
               <span
                 key={i}
-                className="render-hero__bar"
-                style={{ "--bar-h": `${h}%` } as CSSProperties}
+                className="render-hero__aurora-tick"
+                style={
+                  {
+                    "--i": String(i),
+                    "--n": String(AURORA_TICKS),
+                  } as CSSProperties
+                }
+              />
+            ))}
+          </span>
+          <span className="render-hero__aurora-core">
+            <span className="render-hero__aurora-core-halo" />
+            <span className="render-hero__aurora-core-dot" />
+          </span>
+          <span className="render-hero__aurora-sheen" />
+          <span className="render-hero__aurora-beads" aria-hidden="true">
+            {Array.from({ length: AURORA_BEADS }, (_, i) => (
+              <span
+                key={i}
+                className="render-hero__aurora-bead"
+                style={{ "--i": String(i) } as CSSProperties}
               />
             ))}
           </span>

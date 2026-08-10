@@ -16,9 +16,9 @@ import type {
 import { ApiError } from "../api/client";
 import { PUBLIC_LIMITS } from "../config/public-limits";
 import { TRANSITION_STYLE_FALLBACK } from "../lib/transition-catalog";
-import { isLocalCursorPreview } from "./preview-flag";
+import { isLocalCursorPreview, isPreviewHoldRender } from "./preview-flag";
 
-export { isLocalCursorPreview };
+export { isLocalCursorPreview, isPreviewHoldRender };
 
 const nowIso = () => new Date().toISOString();
 
@@ -306,6 +306,9 @@ export function previewEnqueueRender(projectId: string): RenderJob {
     const p = projects.find((x) => x.id === projectId);
     if (p) replaceProject({ ...p, status: "RENDERING", updatedAt: nowIso() });
   }, 600);
+
+  // Design review: ?holdRender=1 keeps RUNNING so the hero animation can be inspected.
+  if (isPreviewHoldRender()) return job;
 
   window.setTimeout(() => {
     const completed: RenderJob = {

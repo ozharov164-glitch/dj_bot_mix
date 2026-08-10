@@ -75,12 +75,6 @@ export function StudioSplash({ status }: StudioSplashProps) {
         <span className="dj-stage__glow dj-stage__glow--a" />
         <span className="dj-stage__glow dj-stage__glow--b" />
 
-        <div className="dj-figure">
-          <span className="dj-figure__head" />
-          <span className="dj-figure__cans" />
-          <span className="dj-figure__body" />
-        </div>
-
         <div className="dj-deck">
           <div className="dj-deck__platter dj-deck__platter--left">
             <span className="dj-deck__vinyl">

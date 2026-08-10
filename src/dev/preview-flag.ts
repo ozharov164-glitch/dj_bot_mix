@@ -11,3 +11,13 @@ export function isLocalCursorPreview(): boolean {
     return false;
   }
 }
+
+/** Hold mock render on RUNNING so design review can inspect the hero animation. */
+export function isPreviewHoldRender(): boolean {
+  if (!isLocalCursorPreview()) return false;
+  try {
+    return new URLSearchParams(window.location.search).get("holdRender") === "1";
+  } catch {
+    return false;
+  }
+}
