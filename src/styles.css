@@ -2739,7 +2739,9 @@ select.field__input option {
   place-items: center;
   margin: 0;
   flex-shrink: 0;
-  overflow: visible;
+  /* Keep rings/scanner inside the music disc */
+  overflow: hidden;
+  border-radius: 999px;
 }
 
 .render-hero__platter {
@@ -2748,48 +2750,49 @@ select.field__input option {
   height: 100%;
   display: grid;
   place-items: center;
+  overflow: hidden;
+  border-radius: 999px;
 }
 
 .render-hero__platter-disc {
   position: absolute;
-  inset: 8%;
+  inset: 6%;
   border-radius: 999px;
   background:
-    radial-gradient(circle at 50% 50%, #1a1e24 0 18%, transparent 19%),
+    radial-gradient(circle at 50% 50%, #222831 0 14%, transparent 15%),
     repeating-radial-gradient(
       circle at 50% 50%,
-      rgba(255, 255, 255, 0.05) 0 1px,
-      transparent 1px 5px
+      rgba(255, 255, 255, 0.045) 0 1px,
+      transparent 1px 4px
     ),
-    radial-gradient(circle at 35% 30%, #2a3038, #0c0e12 70%);
+    radial-gradient(circle at 32% 28%, #2c333c, #0a0c10 72%);
   box-shadow:
-    0 0 0 1px rgba(255, 45, 85, 0.22),
-    0 0 28px rgba(255, 45, 85, 0.2),
-    inset 0 0 24px rgba(0, 0, 0, 0.55);
-  animation: platter-spin 7.5s linear infinite;
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 0 2px rgba(255, 45, 85, 0.16),
+    inset 0 0 28px rgba(0, 0, 0, 0.65);
+  animation: platter-spin 8s linear infinite;
 }
 
 .render-hero__platter-groove {
   position: absolute;
   inset: 18%;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 0 0 1px rgba(255, 45, 85, 0.08);
-  animation: platter-spin 7.5s linear infinite reverse;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   pointer-events: none;
+  animation: platter-spin 8s linear infinite reverse;
 }
 
 .render-hero__platter-core {
   position: absolute;
-  width: 18%;
-  height: 18%;
+  width: 14%;
+  height: 14%;
   border-radius: 999px;
-  background: radial-gradient(circle, #ff6b86 0%, var(--accent) 55%, #7a1028 100%);
+  background: radial-gradient(circle, #ff8aa0 0%, var(--accent) 60%, #5c0c1e 100%);
   box-shadow:
-    0 0 14px rgba(255, 45, 85, 0.75),
-    inset 0 0 4px rgba(255, 255, 255, 0.35);
+    0 0 10px rgba(255, 45, 85, 0.55),
+    inset 0 0 3px rgba(255, 255, 255, 0.4);
   z-index: 3;
-  animation: platter-core-pulse 1.4s ease-in-out infinite;
+  animation: platter-core-pulse 1.6s ease-in-out infinite;
 }
 
 .render-hero__signal-wrap {
@@ -2895,43 +2898,48 @@ select.field__input option {
 
 .render-hero__ring {
   position: absolute;
-  inset: 0;
+  inset: 10%;
   border-radius: 999px;
-  border: 1px solid rgba(255, 45, 85, 0.32);
-  animation: ring-pulse 2.1s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  border: 1px solid rgba(255, 45, 85, 0.28);
+  animation: ring-pulse 2.4s cubic-bezier(0.25, 1, 0.5, 1) infinite;
   pointer-events: none;
+  z-index: 2;
 }
 
 .render-hero__ring--2 {
-  inset: -3%;
-  animation-delay: 0.7s;
-  border-color: rgba(255, 45, 85, 0.2);
+  inset: 18%;
+  animation-delay: 0.8s;
+  border-color: rgba(255, 45, 85, 0.18);
 }
 
 .render-hero__ring--3 {
-  inset: -7%;
-  animation-delay: 1.35s;
+  inset: 28%;
+  animation-delay: 1.5s;
   border-color: rgba(255, 45, 85, 0.12);
 }
 
+/* Scanner rides the disc rim — never outside the music circle */
 .render-hero__arc {
   position: absolute;
-  inset: 0.4rem;
+  inset: 6%;
   border-radius: 999px;
-  border: 2px solid transparent;
-  border-top-color: rgba(255, 45, 85, 0.95);
-  border-right-color: rgba(255, 90, 120, 0.35);
-  animation: spin-slow 3.8s linear infinite;
-  opacity: 1;
-  filter: drop-shadow(0 0 6px rgba(255, 45, 85, 0.55));
+  border: 2.5px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.95);
+  border-right-color: rgba(255, 45, 85, 0.75);
+  animation: spin-slow 3.2s linear infinite;
+  opacity: 0.95;
   pointer-events: none;
+  z-index: 5;
+  box-sizing: border-box;
 }
 
 .render-hero__particles {
   position: absolute;
-  inset: -4%;
+  inset: 10%;
   pointer-events: none;
   z-index: 1;
+  overflow: hidden;
+  border-radius: 999px;
 }
 
 .render-hero__particle {
@@ -2993,32 +3001,34 @@ select.field__input option {
 }
 
 .render-hero__bars {
-  position: relative;
+  position: absolute;
+  left: 50%;
+  top: 50%;
   z-index: 4;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 3px;
-  height: 42%;
-  width: 58%;
-  margin-top: 4%;
+  gap: 2.5px;
+  height: 38%;
+  width: 52%;
+  transform: translate(-50%, -38%);
 }
 
 .render-hero__bar {
   --bar-h: 60%;
-  width: 3.5px;
+  width: 3px;
   height: var(--bar-h);
   border-radius: 999px;
-  background: linear-gradient(180deg, #ff8aa0, var(--accent));
+  background: linear-gradient(180deg, #ffc0cc 0%, #ff5a78 45%, var(--accent) 100%);
   transform-origin: bottom center;
   animation: eq-tall 0.72s ease-in-out infinite;
   will-change: transform;
-  box-shadow: 0 0 8px rgba(255, 45, 85, 0.45);
+  box-shadow: 0 0 6px rgba(255, 45, 85, 0.35);
 }
 
 .render-hero__bar:nth-child(6) {
-  box-shadow: 0 0 14px rgba(255, 45, 85, 0.95);
-  width: 4px;
+  width: 3.5px;
+  box-shadow: 0 0 10px rgba(255, 45, 85, 0.7);
 }
 
 .render-hero__bar:nth-child(1) {
@@ -3219,10 +3229,10 @@ select.field__input option {
   color: var(--muted-soft);
 }
 
-/* In-flow meter — never absolute overlay on the card edge */
+/* Premium waveform strip — clean layers, scanner clipped inside */
 .render-hero__progress {
   width: 100%;
-  max-width: 18.5rem;
+  max-width: 17.5rem;
   height: 0;
   opacity: 0;
   overflow: hidden;
@@ -3233,28 +3243,24 @@ select.field__input option {
 }
 
 .render-hero__progress--active {
-  height: 2.35rem;
+  height: 2rem;
   opacity: 1;
 }
 
 .render-hero__progress-track {
   position: relative;
   width: 100%;
-  height: 2.35rem;
-  border-radius: 14px;
+  height: 2rem;
+  border-radius: 999px;
   overflow: hidden;
   isolation: isolate;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.04),
-      rgba(0, 0, 0, 0.22)
-    ),
-    rgba(255, 45, 85, 0.06);
-  border: 1px solid rgba(255, 45, 85, 0.18);
+  contain: paint;
+  clip-path: inset(0 round 999px);
+  background: linear-gradient(180deg, #12151b 0%, #080a0e 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 0 18px rgba(255, 45, 85, 0.12);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45);
 }
 
 .render-hero__wave {
@@ -3263,62 +3269,95 @@ select.field__input option {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 45, 85, 0.22) 18%,
-    rgba(255, 120, 150, 0.12) 42%,
-    rgba(255, 45, 85, 0.28) 58%,
-    rgba(255, 90, 120, 0.12) 78%,
+    rgba(255, 45, 85, 0.08) 35%,
+    rgba(255, 45, 85, 0.14) 50%,
+    rgba(255, 45, 85, 0.08) 65%,
     transparent 100%
   );
-  background-size: 220% 100%;
-  animation: wave-drift 2.4s linear infinite;
-  opacity: 0.85;
+  background-size: 200% 100%;
+  animation: wave-drift 3.2s linear infinite;
+  opacity: 0.9;
+  z-index: 0;
 }
 
 .render-hero__meter {
   position: absolute;
   inset: 0;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  padding: 0.35rem 0.45rem;
-  gap: 0.1rem;
+  padding: 0.38rem 0.7rem;
+  gap: 2px;
   z-index: 1;
 }
 
 .render-hero__meter-tick {
   --tick: 0;
   flex: 1 1 0;
-  max-width: 3px;
-  height: 78%;
+  max-width: 2.5px;
+  height: 62%;
   border-radius: 999px;
-  background: linear-gradient(180deg, #ff8aa0, var(--accent));
-  transform-origin: bottom center;
-  animation: meter-pulse 0.95s var(--ease-out) infinite;
-  animation-delay: calc(var(--tick) * -0.045s);
-  opacity: 0.55;
-  box-shadow: 0 0 6px rgba(255, 45, 85, 0.35);
+  background: linear-gradient(180deg, #ffb6c4, var(--accent));
+  transform-origin: center;
+  animation: meter-pulse 1.05s var(--ease-out) infinite;
+  animation-delay: calc(var(--tick) * -0.04s);
+  opacity: 0.7;
+  box-shadow: none;
+}
+
+.render-hero__meter-tick:nth-child(1),
+.render-hero__meter-tick:nth-child(36) {
+  height: 28%;
+}
+.render-hero__meter-tick:nth-child(2),
+.render-hero__meter-tick:nth-child(35) {
+  height: 36%;
+}
+.render-hero__meter-tick:nth-child(3),
+.render-hero__meter-tick:nth-child(34) {
+  height: 44%;
+}
+.render-hero__meter-tick:nth-child(4),
+.render-hero__meter-tick:nth-child(33) {
+  height: 52%;
+}
+.render-hero__meter-tick:nth-child(5),
+.render-hero__meter-tick:nth-child(32) {
+  height: 58%;
+}
+.render-hero__meter-tick:nth-child(8),
+.render-hero__meter-tick:nth-child(29) {
+  height: 78%;
+}
+.render-hero__meter-tick:nth-child(12),
+.render-hero__meter-tick:nth-child(25) {
+  height: 92%;
+}
+.render-hero__meter-tick:nth-child(18),
+.render-hero__meter-tick:nth-child(19) {
+  height: 100%;
 }
 
 .render-hero__pulse {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: 10%;
+  bottom: 10%;
   left: 0;
-  width: 34%;
+  width: 16%;
   z-index: 2;
-  border-radius: inherit;
+  border-radius: 999px;
   background: linear-gradient(
     90deg,
-    rgba(255, 45, 85, 0) 0%,
-    rgba(255, 45, 85, 0.12) 22%,
-    rgba(255, 255, 255, 0.5) 48%,
-    rgba(255, 45, 85, 0.95) 58%,
-    rgba(255, 90, 120, 0.3) 78%,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 30%,
+    rgba(255, 255, 255, 0.72) 50%,
+    rgba(255, 45, 85, 0.55) 68%,
     transparent 100%
   );
-  filter: blur(0.3px);
-  animation: signal-sweep 1.7s cubic-bezier(0.45, 0.05, 0.2, 1) infinite;
-  mix-blend-mode: screen;
+  filter: none;
+  mix-blend-mode: normal;
+  animation: signal-sweep 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform;
 }
 
 .render-hero--queued .render-hero__meter-tick {
@@ -3424,6 +3463,8 @@ select.field__input option {
   height: 6.25rem;
   min-height: 6.25rem;
   margin: 0;
+  overflow: hidden;
+  border-radius: 999px;
 }
 
 .panel--symmetric {
@@ -3888,14 +3929,14 @@ select.field__input option {
 
 @keyframes ring-pulse {
   0% {
-    transform: scale(0.88);
+    transform: scale(0.94);
     opacity: 0;
   }
-  40% {
-    opacity: 0.35;
+  45% {
+    opacity: 0.45;
   }
   100% {
-    transform: scale(1.22);
+    transform: scale(1);
     opacity: 0;
   }
 }
@@ -3971,18 +4012,18 @@ select.field__input option {
 
 @keyframes signal-sweep {
   0% {
-    transform: translateX(-105%);
-    opacity: 0.25;
+    transform: translateX(-120%);
+    opacity: 0;
   }
-  18% {
+  12% {
     opacity: 1;
   }
-  82% {
+  88% {
     opacity: 1;
   }
   100% {
-    transform: translateX(270%);
-    opacity: 0.2;
+    transform: translateX(620%);
+    opacity: 0;
   }
 }
 
