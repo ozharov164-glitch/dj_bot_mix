@@ -125,7 +125,9 @@ describe("ProjectDetailPage render UX", () => {
 
     expect(await screen.findByRole("status")).toBeInTheDocument();
     expect(screen.getByText("Вы в очереди")).toBeInTheDocument();
-    expect(document.body.textContent).toMatch(/Вы в очереди/i);
+    expect(document.querySelector(".render-hero__aurora")).not.toBeNull();
+    expect(document.querySelector(".render-hero__queue")).toBeNull();
+    expect(document.body.textContent).toMatch(/чат/i);
     expect(document.body.textContent).not.toMatch(
       /https?:\/\/|\/v1\/downloads|token=/i,
     );

@@ -33,6 +33,8 @@ describe("render-status helpers", () => {
     }
     expect(renderStatusDescription("COMPLETED")).toMatch(/в чате с ботом/i);
     expect(renderStatusDescription("COMPLETED")).not.toMatch(/Скачивание/i);
+    expect(renderStatusDescription("QUEUED")).not.toMatch(/^Вы в очереди/);
+    expect(renderStatusDescription("QUEUED")).toMatch(/чат/);
     expect(renderStatusDescription("RUNNING")).toMatch(/закрыть приложение/i);
     expect(renderStatusDescription("RUNNING")).toMatch(/чат с ботом/i);
   });

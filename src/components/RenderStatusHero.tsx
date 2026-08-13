@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import type { RenderJobStatus } from "../api/client";
 
 type RenderStatusHeroProps = {
@@ -20,131 +20,109 @@ type Snapshot = {
   detail: string | null;
 };
 
+function AuroraMark() {
+  const uid = useId().replace(/:/g, "");
+  const gradId = `aurora-orbit-grad-${uid}`;
+  return (
+    <span className="render-hero__aurora">
+      <span className="render-hero__aurora-bloom" />
+      <span className="render-hero__aurora-glass" />
+      <span className="render-hero__aurora-mesh" />
+      <span className="render-hero__aurora-ripple render-hero__aurora-ripple--1" />
+      <span className="render-hero__aurora-ripple render-hero__aurora-ripple--2" />
+      <span className="render-hero__aurora-ripple render-hero__aurora-ripple--3" />
+      <svg
+        className="render-hero__aurora-orbit render-hero__aurora-orbit--a"
+        viewBox="0 0 100 100"
+        fill="none"
+        aria-hidden="true"
+      >
+        <circle
+          cx="50"
+          cy="50"
+          r="45"
+          className="render-hero__aurora-rail"
+          strokeWidth="1.15"
+        />
+        <circle
+          cx="50"
+          cy="50"
+          r="45"
+          stroke={`url(#${gradId})`}
+          strokeDasharray="96 186"
+          strokeLinecap="round"
+          strokeWidth="1.85"
+        />
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="100" y2="100">
+            <stop offset="0%" stopColor="#fff" stopOpacity="0.95" />
+            <stop offset="55%" stopColor="#ff2d55" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#ff2d55" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <svg
+        className="render-hero__aurora-orbit render-hero__aurora-orbit--b"
+        viewBox="0 0 100 100"
+        fill="none"
+        aria-hidden="true"
+      >
+        <circle
+          cx="50"
+          cy="50"
+          r="36"
+          className="render-hero__aurora-rail"
+          strokeWidth="0.9"
+          opacity="0.7"
+        />
+        <circle
+          cx="50"
+          cy="50"
+          r="36"
+          stroke="currentColor"
+          strokeDasharray="72 180"
+          strokeLinecap="round"
+          strokeWidth="1.35"
+          opacity="0.7"
+        />
+      </svg>
+      <span className="render-hero__aurora-ticks" aria-hidden="true">
+        {Array.from({ length: AURORA_TICKS }, (_, i) => (
+          <span
+            key={i}
+            className="render-hero__aurora-tick"
+            style={
+              {
+                "--i": String(i),
+                "--n": String(AURORA_TICKS),
+              } as CSSProperties
+            }
+          />
+        ))}
+      </span>
+      <span className="render-hero__aurora-core">
+        <span className="render-hero__aurora-core-halo" />
+        <span className="render-hero__aurora-core-dot" />
+      </span>
+      <span className="render-hero__aurora-sheen" />
+      <span className="render-hero__aurora-beads" aria-hidden="true">
+        {Array.from({ length: AURORA_BEADS }, (_, i) => (
+          <span
+            key={i}
+            className="render-hero__aurora-bead"
+            style={{ "--i": String(i) } as CSSProperties}
+          />
+        ))}
+      </span>
+    </span>
+  );
+}
+
 function StatusMark({ status }: { status: RenderJobStatus }) {
   switch (status) {
     case "RUNNING":
-      return (
-        <span className="render-hero__aurora">
-          <span className="render-hero__aurora-bloom" />
-          <span className="render-hero__aurora-glass" />
-          <span className="render-hero__aurora-mesh" />
-          <span className="render-hero__aurora-ripple render-hero__aurora-ripple--1" />
-          <span className="render-hero__aurora-ripple render-hero__aurora-ripple--2" />
-          <span className="render-hero__aurora-ripple render-hero__aurora-ripple--3" />
-          <svg
-            className="render-hero__aurora-orbit render-hero__aurora-orbit--a"
-            viewBox="0 0 100 100"
-            fill="none"
-            aria-hidden="true"
-          >
-            <circle
-              cx="50"
-              cy="50"
-              r="45"
-              stroke="url(#aurora-orbit-grad)"
-              strokeDasharray="68 220"
-              strokeLinecap="round"
-              strokeWidth="1.6"
-            />
-            <defs>
-              <linearGradient
-                id="aurora-orbit-grad"
-                x1="0"
-                y1="0"
-                x2="100"
-                y2="100"
-              >
-                <stop offset="0%" stopColor="#fff" stopOpacity="0.95" />
-                <stop offset="55%" stopColor="#ff2d55" stopOpacity="0.9" />
-                <stop offset="100%" stopColor="#ff2d55" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <svg
-            className="render-hero__aurora-orbit render-hero__aurora-orbit--b"
-            viewBox="0 0 100 100"
-            fill="none"
-            aria-hidden="true"
-          >
-            <circle
-              cx="50"
-              cy="50"
-              r="36"
-              stroke="currentColor"
-              strokeDasharray="42 210"
-              strokeLinecap="round"
-              strokeWidth="1.25"
-              opacity="0.55"
-            />
-          </svg>
-          <span className="render-hero__aurora-ticks" aria-hidden="true">
-            {Array.from({ length: AURORA_TICKS }, (_, i) => (
-              <span
-                key={i}
-                className="render-hero__aurora-tick"
-                style={
-                  {
-                    "--i": String(i),
-                    "--n": String(AURORA_TICKS),
-                  } as CSSProperties
-                }
-              />
-            ))}
-          </span>
-          <span className="render-hero__aurora-core">
-            <span className="render-hero__aurora-core-halo" />
-            <span className="render-hero__aurora-core-dot" />
-          </span>
-          <span className="render-hero__aurora-sheen" />
-          <span className="render-hero__aurora-beads" aria-hidden="true">
-            {Array.from({ length: AURORA_BEADS }, (_, i) => (
-              <span
-                key={i}
-                className="render-hero__aurora-bead"
-                style={{ "--i": String(i) } as CSSProperties}
-              />
-            ))}
-          </span>
-        </span>
-      );
     case "QUEUED":
-      return (
-        <span className="render-hero__queue">
-          <svg
-            className="render-hero__queue-ring render-hero__queue-ring--outer"
-            viewBox="0 0 100 100"
-            fill="none"
-            aria-hidden="true"
-          >
-            <circle
-              cx="50"
-              cy="50"
-              r="46"
-              stroke="currentColor"
-              strokeDasharray="80 200"
-              strokeLinecap="round"
-              strokeWidth="2"
-            />
-          </svg>
-          <svg
-            className="render-hero__queue-ring render-hero__queue-ring--inner"
-            viewBox="0 0 100 100"
-            fill="none"
-            aria-hidden="true"
-          >
-            <circle
-              cx="50"
-              cy="50"
-              r="46"
-              stroke="currentColor"
-              strokeDasharray="140 140"
-              strokeLinecap="round"
-              strokeWidth="3"
-            />
-          </svg>
-          <span className="render-hero__queue-dot" />
-        </span>
-      );
+      return <AuroraMark />;
     case "COMPLETED":
       return (
         <span className="render-hero__check-wrap">
