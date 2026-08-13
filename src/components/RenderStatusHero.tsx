@@ -1,5 +1,13 @@
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import {
+  memo,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import type { RenderJobStatus } from "../api/client";
+import { RENDER_MORPH_MS, renderMarkKind } from "../lib/render-status";
 
 type RenderStatusHeroProps = {
   status: RenderJobStatus;
@@ -11,7 +19,6 @@ type RenderStatusHeroProps = {
 const METER_TICKS = 36;
 const AURORA_TICKS = 48;
 const AURORA_BEADS = 6;
-const MORPH_MS = 420;
 
 type Snapshot = {
   status: RenderJobStatus;
@@ -20,7 +27,7 @@ type Snapshot = {
   detail: string | null;
 };
 
-function AuroraMark() {
+const AuroraMark = memo(function AuroraMark() {
   const uid = useId().replace(/:/g, "");
   const gradId = `aurora-orbit-grad-${uid}`;
   return (
@@ -30,7 +37,6 @@ function AuroraMark() {
       <span className="render-hero__aurora-mesh" />
       <span className="render-hero__aurora-ripple render-hero__aurora-ripple--1" />
       <span className="render-hero__aurora-ripple render-hero__aurora-ripple--2" />
-      <span className="render-hero__aurora-ripple render-hero__aurora-ripple--3" />
       <svg
         className="render-hero__aurora-orbit render-hero__aurora-orbit--a"
         viewBox="0 0 100 100"
@@ -116,9 +122,13 @@ function AuroraMark() {
       </span>
     </span>
   );
-}
+});
 
-function StatusMark({ status }: { status: RenderJobStatus }) {
+const StatusMark = memo(function StatusMark({
+  status,
+}: {
+  status: RenderJobStatus;
+}) {
   switch (status) {
     case "RUNNING":
     case "QUEUED":
@@ -151,7 +161,7 @@ function StatusMark({ status }: { status: RenderJobStatus }) {
       return _exhaustive;
     }
   }
-}
+});
 
 function HeroCopy({
   title,
@@ -171,7 +181,11 @@ function HeroCopy({
   );
 }
 
-function ProgressMeter({ active }: { active: boolean }) {
+const ProgressMeter = memo(function ProgressMeter({
+  active,
+}: {
+  active: boolean;
+}) {
   return (
     <div
       className={
@@ -185,18 +199,14 @@ function ProgressMeter({ active }: { active: boolean }) {
         <span className="render-hero__wave" />
         <span className="render-hero__meter">
           {Array.from({ length: METER_TICKS }, (_, i) => (
-            <span
-              key={i}
-              className="render-hero__meter-tick"
-              style={{ "--tick": String(i) } as CSSProperties}
-            />
+            <span key={i} className="render-hero__meter-tick" />
           ))}
         </span>
         <span className="render-hero__pulse" />
       </div>
     </div>
   );
-}
+});
 
 export function RenderStatusHero({
   status,
@@ -210,6 +220,7 @@ export function RenderStatusHero({
   const isFailed = status === "FAILED";
   const detailValue = detail ?? null;
   const progressActive = isRunning || isQueued;
+  const kind = renderMarkKind(status);
 
   const currentRef = useRef<Snapshot>({
     status,
@@ -217,38 +228,36 @@ export function RenderStatusHero({
     description,
     detail: detailValue,
   });
-  const [leaving, setLeaving] = useState<Snapshot | null>(null);
+  const [leavingMark, setLeavingMark] = useState<RenderJobStatus | null>(null);
+  const [leavingCopy, setLeavingCopy] = useState<Snapshot | null>(null);
   const [morphing, setMorphing] = useState(false);
 
   useEffect(() => {
     const prev = currentRef.current;
-    if (prev.status === status) {
-      currentRef.current = {
-        status,
-        title,
-        description,
-        detail: detailValue,
-      };
-      return;
-    }
-    setLeaving(prev);
-    setMorphing(true);
+    const statusChanged = prev.status !== status;
     currentRef.current = {
       status,
       title,
       description,
       detail: detailValue,
     };
-  }, [status, title, description, detailValue]);
+    if (!statusChanged) return;
+    if (renderMarkKind(prev.status) !== kind) {
+      setLeavingMark(prev.status);
+    }
+    setLeavingCopy(prev);
+    setMorphing(true);
+  }, [status, title, description, detailValue, kind]);
 
   useEffect(() => {
-    if (!leaving) return;
+    if (!leavingMark && !leavingCopy) return;
     const timer = window.setTimeout(() => {
-      setLeaving(null);
+      setLeavingMark(null);
+      setLeavingCopy(null);
       setMorphing(false);
-    }, MORPH_MS);
+    }, RENDER_MORPH_MS);
     return () => window.clearTimeout(timer);
-  }, [leaving, status]);
+  }, [leavingMark, leavingCopy, status]);
 
   return (
     <section
@@ -269,49 +278,39 @@ export function RenderStatusHero({
       <div className="render-hero__glow render-hero__glow--b" aria-hidden="true" />
       <div className="render-hero__card">
         <div className="render-hero__mark" aria-hidden="true">
-          {leaving ? (
+          {leavingMark ? (
             <div
-              key={`leave-${leaving.status}`}
+              key={`leave-${renderMarkKind(leavingMark)}`}
               className="render-hero__mark-layer render-hero__mark-layer--exit"
             >
-              <StatusMark status={leaving.status} />
+              <StatusMark status={leavingMark} />
             </div>
           ) : null}
           <div
-            key={`enter-${status}`}
-            className={[
-              "render-hero__mark-layer",
-              morphing
-                ? "render-hero__mark-layer--enter"
-                : "render-hero__mark-layer--settled",
-            ].join(" ")}
+            key={`enter-${kind}`}
+            className="render-hero__mark-layer render-hero__mark-layer--enter"
           >
             <StatusMark status={status} />
           </div>
         </div>
 
         <div className="render-hero__copy-stack">
-          {leaving ? (
+          {leavingCopy ? (
             <div
-              key={`leave-copy-${leaving.status}`}
+              key={`leave-copy-${leavingCopy.status}-${leavingCopy.title}`}
               className="render-hero__copy render-hero__copy--exit"
               aria-hidden="true"
             >
               <HeroCopy
-                title={leaving.title}
-                description={leaving.description}
-                detail={leaving.detail}
+                title={leavingCopy.title}
+                description={leavingCopy.description}
+                detail={leavingCopy.detail}
               />
             </div>
           ) : null}
           <div
-            key={`enter-copy-${status}`}
-            className={[
-              "render-hero__copy",
-              morphing
-                ? "render-hero__copy--enter"
-                : "render-hero__copy--settled",
-            ].join(" ")}
+            key={`enter-copy-${status}-${title}`}
+            className="render-hero__copy render-hero__copy--enter"
           >
             <HeroCopy
               title={title}

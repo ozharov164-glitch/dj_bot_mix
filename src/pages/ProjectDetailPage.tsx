@@ -33,9 +33,11 @@ import { EFFECT_HINTS, EFFECT_LABELS } from "../lib/effect-catalog";
 import {
   canEnqueueRender,
   nextRenderPollDelayMs,
+  renderHeroTitle,
   renderStatusDescription,
   renderStatusTitle,
 } from "../lib/render-status";
+import { useChoreographedRenderStatus } from "../lib/use-choreographed-render-status";
 import { hapticImpact, hapticNotification, openBotChat } from "../lib/telegram";
 import {
   resolveTransitionCatalog,
@@ -187,6 +189,8 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
       if (timer) clearTimeout(timer);
     };
   }, [projectId, renderJob?.id, renderJob?.status]);
+
+  const visualStatus = useChoreographedRenderStatus(renderJob?.status ?? null);
 
   const editable =
     project !== null && EDITABLE_STATUSES.includes(project.status);
@@ -407,6 +411,8 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
       renderJob.status === "RUNNING" ||
       renderJob.status === "COMPLETED" ||
       renderJob.status === "FAILED");
+  const shownStatus = visualStatus ?? renderJob?.status;
+  const heroStatus = shownStatus;
   const renderAvailable =
     (project.type === "SINGLE_EFFECT" && renderFeature) ||
     (project.type === "MIX" && mixRenderFeature);
@@ -457,30 +463,23 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
 
       {error ? <ErrorBanner message={error} /> : null}
 
-      {renderFocus && renderJob ? (
+      {renderFocus && renderJob && heroStatus ? (
         <div className="detail-focus">
           <RenderStatusHero
-            status={renderJob.status}
-            title={
-              renderJob.status === "RUNNING"
-                ? "Собираем файл"
-                : renderJob.status === "QUEUED"
-                  ? "Вы в очереди"
-                  : renderJob.status === "COMPLETED"
-                    ? "Готово"
-                    : renderStatusTitle(renderJob.status)
-            }
-            description={renderStatusDescription(renderJob.status, {
-              queuePosition: renderJob.queuePosition,
+            status={heroStatus}
+            title={renderHeroTitle(heroStatus)}
+            description={renderStatusDescription(heroStatus, {
+              queuePosition:
+                heroStatus === "QUEUED" ? renderJob.queuePosition : null,
               errorMessage: renderJob.errorMessage,
             })}
             detail={
-              renderJob.status === "COMPLETED" && renderJob.result
+              heroStatus === "COMPLETED" && renderJob.result
                 ? `Размер: ${formatBytes(renderJob.result.sizeBytes)}`
                 : null
             }
           />
-          {renderJob.status === "COMPLETED" ? (
+          {heroStatus === "COMPLETED" ? (
             <div className="cta-bar cta-bar--symmetric">
               <Button
                 fullWidth
@@ -493,7 +492,7 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
               </Button>
             </div>
           ) : null}
-          {renderJob.status === "FAILED" && renderAvailable ? (
+          {heroStatus === "FAILED" && renderAvailable ? (
             <div className="cta-bar cta-bar--symmetric">
               <Button
                 fullWidth

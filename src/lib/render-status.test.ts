@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   canEnqueueRender,
   canEnqueueSingleEffectRender,
+  expandRenderPath,
   nextRenderPollDelayMs,
+  renderHeroTitle,
+  renderMarkKind,
   renderStatusDescription,
   renderStatusTitle,
   RENDER_POLL_BASE_MS,
@@ -21,6 +24,20 @@ describe("render-status helpers", () => {
     expect(renderStatusTitle("RUNNING")).toContain("Обрабатывается");
     expect(renderStatusTitle("COMPLETED")).toBe("Готово");
     expect(renderStatusTitle("FAILED")).toContain("Ошибка");
+  });
+
+  it("never skips RUNNING when expanding a completed path", () => {
+    expect(expandRenderPath("QUEUED", "COMPLETED")).toEqual([
+      "RUNNING",
+      "COMPLETED",
+    ]);
+    expect(expandRenderPath("QUEUED", "RUNNING")).toEqual(["RUNNING"]);
+    expect(expandRenderPath("RUNNING", "COMPLETED")).toEqual(["COMPLETED"]);
+    expect(expandRenderPath("QUEUED", "FAILED")).toEqual(["FAILED"]);
+    expect(expandRenderPath("QUEUED", "QUEUED")).toEqual([]);
+    expect(renderMarkKind("QUEUED")).toBe("aurora");
+    expect(renderMarkKind("RUNNING")).toBe("aurora");
+    expect(renderHeroTitle("RUNNING")).toBe("Собираем файл");
   });
 
   it("never embeds download URLs in status copy", () => {
