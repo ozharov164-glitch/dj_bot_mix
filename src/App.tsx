@@ -28,6 +28,21 @@ type Route =
   | { name: "create" }
   | { name: "project"; id: string };
 
+function initialRoute(): Route {
+  if (!isLocalCursorPreview()) {
+    return { name: "projects" };
+  }
+  try {
+    const projectId = new URLSearchParams(window.location.search).get("project");
+    if (projectId) {
+      return { name: "project", id: projectId };
+    }
+  } catch {
+    /* ignore malformed preview URLs */
+  }
+  return { name: "projects" };
+}
+
 /** Mini App is dark-only; Telegram colorScheme must never flip the shell to light. */
 const SHELL_CLASS = "shell shell--dark";
 
@@ -74,10 +89,10 @@ function AppShell() {
   const [onboardingDone, setOnboardingDone] = useState(
     () => isLocalCursorPreview() || hasCompletedOnboarding(),
   );
-  const [splashDone, setSplashDone] = useState(false);
+  const [splashDone, setSplashDone] = useState(() => isLocalCursorPreview());
   /** Opening splash deadline — starts at first in-Telegram paint, never after gates. */
   const splashDeadlineRef = useRef<number | null>(null);
-  const [route, setRoute] = useState<Route>({ name: "projects" });
+  const [route, setRoute] = useState<Route>(initialRoute);
   const [direction, setDirection] = useState<NavDirection>("none");
 
   const navigate = useCallback((next: Route, dir: NavDirection) => {
@@ -99,7 +114,7 @@ function AppShell() {
 
   // Opening animation runs once at boot — before consent / «Начать».
   useEffect(() => {
-    if (status === "outside") {
+    if (isLocalCursorPreview() || status === "outside") {
       return;
     }
     if (splashDeadlineRef.current == null) {

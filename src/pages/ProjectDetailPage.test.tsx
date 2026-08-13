@@ -132,7 +132,11 @@ describe("ProjectDetailPage render UX", () => {
     expect(
       screen.queryByRole("button", { name: "Обработать" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("tablist", { name: "Карточки" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("tablist", { name: "Карточки" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Этапы")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Параметры/)).not.toBeInTheDocument();
   });
 
   it("shows completed status and bot delivery copy without download CTA", async () => {

@@ -93,8 +93,15 @@ function seedProjects(): Project[] {
       createdAt,
       updatedAt: createdAt,
       files: [
-        makeFile("a1", "intro.mp3", 0, 4_200_000, 128),
-        makeFile("a2", "drop.mp3", 1, 5_100_000, 176),
+        makeFile("a1", "Nyusha_-_Ne_perebivajj_47836057.mp3", 0, 4_200_000, 128),
+        makeFile("a2", "Хочу другого 2.0.mp3", 1, 5_100_000, 176),
+        makeFile(
+          "a3",
+          "Brazilian warrior, speed up - DARK FANTASY FUNK NIGHTCORE.mp3",
+          2,
+          6_400_000,
+          198,
+        ),
       ],
     },
     {
@@ -134,6 +141,39 @@ function makeFile(
 
 let projects = seedProjects();
 const jobs = new Map<string, RenderJob>();
+
+if (isPreviewHoldRender()) {
+  const mixId = "11111111-1111-4111-8111-111111111111";
+  const mix = projects.find((project) => project.id === mixId);
+  if (mix) {
+    const held: RenderJob = {
+      id: "preview-held-render",
+      projectId: mixId,
+      jobType: "MIX_RENDER",
+      status: "RUNNING",
+      attempts: 1,
+      maxAttempts: 3,
+      queuePosition: null,
+      effect: null,
+      transitionStyle: mix.transitionStyle,
+      trackCount: mix.files.length,
+      outputFormat: mix.outputFormat,
+      errorCode: null,
+      errorMessage: null,
+      result: null,
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      startedAt: nowIso(),
+      completedAt: null,
+    };
+    jobs.set(mixId, held);
+    projects = projects.map((project) =>
+      project.id === mixId
+        ? { ...project, status: "RENDERING", updatedAt: nowIso() }
+        : project,
+    );
+  }
+}
 
 function findProject(id: string): Project {
   const project = projects.find((p) => p.id === id);

@@ -11,7 +11,7 @@ type RenderStatusHeroProps = {
 const METER_TICKS = 36;
 const AURORA_TICKS = 48;
 const AURORA_BEADS = 6;
-const MORPH_MS = 560;
+const MORPH_MS = 420;
 
 type Snapshot = {
   status: RenderJobStatus;

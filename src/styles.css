@@ -2589,42 +2589,44 @@ select.field__input option {
   position: relative;
   margin: 0;
   width: 100%;
+  overflow: visible;
+  isolation: isolate;
 }
 
 .render-hero__glow {
   position: absolute;
-  inset: -14px;
-  border-radius: 28px;
+  inset: 6% 8% 28%;
+  border-radius: 50%;
   background: radial-gradient(
     circle at 50% 38%,
     rgba(255, 45, 85, 0.32),
     transparent 64%
   );
-  filter: blur(20px);
+  filter: blur(28px);
   pointer-events: none;
   animation: hero-breathe 2.6s ease-in-out infinite;
   z-index: 0;
 }
 
 .render-hero__glow--a {
-  inset: -18px;
+  inset: 2% 10% 32%;
   background: radial-gradient(
     circle at 50% 32%,
     rgba(255, 45, 85, 0.42),
     transparent 58%
   );
-  filter: blur(26px);
+  filter: blur(36px);
   mix-blend-mode: screen;
 }
 
 .render-hero__glow--b {
-  inset: -6px;
+  inset: 18% 18% 36%;
   background: radial-gradient(
     circle at 50% 55%,
     rgba(255, 45, 85, 0.2),
     transparent 52%
   );
-  filter: blur(14px);
+  filter: blur(18px);
   animation-delay: -1.3s;
   mix-blend-mode: screen;
 }
@@ -2652,27 +2654,20 @@ select.field__input option {
   grid-template-rows: auto auto auto;
   justify-items: center;
   align-items: center;
-  gap: 1rem;
+  gap: 1.15rem;
   width: 100%;
-  padding: 1.35rem 1.2rem 1.2rem;
-  border-radius: var(--radius-card);
-  background:
-    radial-gradient(
-      120% 80% at 50% 0%,
-      rgba(255, 45, 85, 0.1),
-      transparent 55%
-    ),
-    linear-gradient(180deg, #161a1f 0%, #10141a 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  overflow: hidden;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  overflow: visible;
   isolation: isolate;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.05) inset,
-    0 16px 40px rgba(0, 0, 0, 0.4);
   text-align: center;
 }
 
 .render-hero__mark {
+  --orbit-tick: 2.05rem;
+  --orbit-bead: 2.55rem;
   position: relative;
   width: 7.5rem;
   height: 7.5rem;
@@ -2683,6 +2678,8 @@ select.field__input option {
   margin: 0;
   flex-shrink: 0;
   overflow: visible;
+  isolation: isolate;
+  border-radius: 999px;
 }
 
 /* Premium aurora orb — glass core, orbital arcs, circular spectrum */
@@ -2818,7 +2815,8 @@ select.field__input option {
     rgba(255, 45, 85, 0.85) 55%,
     rgba(255, 45, 85, 0.15) 100%
   );
-  transform: rotate(calc((var(--i) / var(--n)) * 360deg)) translateY(-2.05rem)
+  transform: rotate(calc((var(--i) / var(--n)) * 360deg))
+    translateY(calc(var(--orbit-tick) * -1))
     scaleY(0.35);
   transform-origin: center center;
   opacity: 0.45;
@@ -2892,7 +2890,8 @@ select.field__input option {
   border-radius: 999px;
   background: radial-gradient(circle, #fff 0%, var(--accent) 70%, transparent 100%);
   box-shadow: 0 0 8px rgba(255, 45, 85, 0.65);
-  transform: rotate(calc(var(--i) * 60deg)) translateY(-3.35rem);
+  transform: rotate(calc(var(--i) * 60deg))
+    translateY(calc(var(--orbit-bead) * -1));
   opacity: 0.7;
   animation: aurora-bead 2.4s ease-in-out infinite;
   animation-delay: calc(var(--i) * -0.35s);
@@ -2937,7 +2936,8 @@ select.field__input option {
 
 .render-hero__mark-layer {
   grid-area: mark;
-  position: relative;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   display: grid;
@@ -2952,27 +2952,30 @@ select.field__input option {
 
 .render-hero__mark-layer--enter {
   z-index: 2;
-  animation: hero-mark-enter 560ms var(--ease-spring) both;
+  animation: hero-mark-enter 420ms var(--ease-spring) both;
 }
 
 .render-hero__mark-layer--exit {
   z-index: 1;
   pointer-events: none;
-  animation: hero-mark-exit 480ms var(--ease-spring) both;
+  animation: hero-mark-exit 280ms var(--ease-out) both;
 }
 
 .render-hero__copy-stack {
+  position: relative;
   display: grid;
   grid-template-areas: "copy";
   width: 100%;
-  min-height: 4.6rem;
+  min-height: 0;
   justify-items: center;
-  align-content: center;
+  align-content: start;
   margin: 0;
+  overflow: hidden;
 }
 
 .render-hero__copy {
   grid-area: copy;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2990,13 +2993,15 @@ select.field__input option {
 
 .render-hero__copy--enter {
   z-index: 2;
-  animation: hero-copy-enter 540ms var(--ease-spring) both;
+  animation: hero-copy-enter 420ms var(--ease-spring) both;
 }
 
 .render-hero__copy--exit {
+  position: absolute;
+  inset: 0;
   z-index: 1;
   pointer-events: none;
-  animation: hero-copy-exit 420ms var(--ease-spring) both;
+  animation: hero-copy-exit 280ms var(--ease-out) both;
 }
 
 .render-hero__queue {
@@ -3122,19 +3127,21 @@ select.field__input option {
 
 .render-hero__title {
   margin: 0;
-  font-size: 1.22rem;
+  font-size: 1.28rem;
   font-weight: 760;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.03em;
   line-height: 1.2;
+  text-align: center;
 }
 
 .render-hero__desc,
 .render-hero__detail {
   margin: 0;
   max-width: 28ch;
-  font-size: 0.88rem;
-  line-height: 1.45;
+  font-size: 0.9rem;
+  line-height: 1.5;
   color: var(--muted);
+  text-align: center;
 }
 
 .render-hero__detail {
@@ -3289,7 +3296,7 @@ select.field__input option {
   pointer-events: none;
 }
 
-/* —— Project detail symmetry + render card stage —— */
+/* —— Project detail: edit left-aligned, render status centered —— */
 .page--detail {
   gap: 1.25rem;
 }
@@ -3319,65 +3326,127 @@ select.field__input option {
 .detail-focus {
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
+  gap: 1.25rem;
   width: 100%;
-  align-items: stretch;
+  align-items: center;
   animation: page-enter-fade 280ms var(--ease-spring) both;
 }
 
 .page--render-focus {
-  /* Pack render UI tight — no phantom scroll from absolute measure */
   justify-content: flex-start;
-  gap: 0.65rem;
+  gap: 0;
   overflow: hidden;
 }
 
 .page-stage > .page.page--render-focus {
-  flex: 0 0 auto;
-  min-height: auto;
-  max-height: none;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .page--render-focus .page-header--detail {
+  position: relative;
   flex-shrink: 0;
+  min-height: var(--tap-min);
 }
 
+.page--render-focus .page-header--detail .page-header__main {
+  align-items: stretch;
+  padding-inline: 0;
+}
+
+.page--render-focus .page-header--detail .back-link {
+  position: relative;
+  left: auto;
+  top: auto;
+  margin: 0;
+  z-index: 1;
+}
+
+.page--render-focus .page-header--detail .flow-crumb,
 .page--render-focus .page-header--detail .flow-breadcrumb {
   display: none;
 }
 
-.page--render-focus .page-header--detail .page-title {
-  font-size: 1.15rem;
-  margin: 0.15rem 0 0;
-}
-
-.page--render-focus .page-header--detail .project-meta {
-  margin: 0.15rem 0 0;
-  font-size: 0.8rem;
-}
-
 .page--render-focus .detail-focus {
-  flex: 0 0 auto;
-  justify-content: flex-start;
-  gap: 0.65rem;
+  flex: 1 1 auto;
+  justify-content: center;
+  align-items: center;
+  gap: 1.85rem;
   min-height: 0;
-  padding-bottom: 0;
-  overflow: hidden;
+  padding: 0.5rem 0 1.25rem;
+  overflow: visible;
+}
+
+.page--render-focus .render-hero {
+  margin: 0;
+  width: 100%;
+  flex: 0 0 auto;
+  overflow: visible;
 }
 
 .page--render-focus .render-hero__card {
   min-height: 0;
-  padding: 1.15rem 1.1rem 1.05rem;
-  gap: 0.85rem;
+  padding: 0;
+  gap: 1.85rem;
+  background: none;
+  border: 0;
+  box-shadow: none;
 }
 
 .page--render-focus .render-hero__mark {
-  width: 6.25rem;
-  height: 6.25rem;
-  min-height: 6.25rem;
+  --orbit-tick: 5.35rem;
+  --orbit-bead: 5.85rem;
+  width: 13rem;
+  height: 13rem;
+  min-height: 13rem;
   margin: 0;
-  overflow: hidden;
-  border-radius: 999px;
+  overflow: visible;
+}
+
+.page--render-focus .render-hero__aurora-core {
+  width: 1.85rem;
+  height: 1.85rem;
+}
+
+.page--render-focus .render-hero__aurora-tick {
+  height: 12px;
+}
+
+.page--render-focus .render-hero__queue,
+.page--render-focus .render-hero__check-wrap {
+  width: 72%;
+  height: 72%;
+}
+
+.page--render-focus .render-hero__title {
+  font-size: 1.7rem;
+  letter-spacing: -0.04em;
+}
+
+.page--render-focus .render-hero__desc {
+  font-size: 0.98rem;
+  max-width: 26ch;
+  line-height: 1.55;
+}
+
+.page--render-focus .render-hero__progress {
+  max-width: 19.5rem;
+}
+
+.page--render-focus .render-hero__progress--active {
+  height: 2.35rem;
+}
+
+.page--render-focus .render-hero__progress-track {
+  height: 2.35rem;
+}
+
+.page--render-focus .cta-bar {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 22rem;
+  margin: 0 auto;
+  padding-bottom: 0;
 }
 
 .panel--symmetric {
@@ -3389,348 +3458,6 @@ select.field__input option {
   max-width: 34ch;
   margin-left: auto;
   margin-right: auto;
-}
-
-.card-stage {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  width: 100%;
-  overflow: hidden;
-}
-
-/* Off-screen measure: slides stacked at origin so absolute box
-   cannot inflate ancestor scrollHeight (WebKit overflow bug). */
-.card-stage__measure {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  width: 100%;
-  height: 0;
-  overflow: hidden;
-  visibility: hidden;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.card-stage__measure-slide {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  padding: 1.25rem 1.2rem 1.35rem;
-  box-sizing: border-box;
-  width: 100%;
-}
-
-.card-stage__viewport {
-  --stage-h: auto;
-  position: relative;
-  width: 100%;
-  height: var(--stage-h);
-  min-height: 0;
-  max-height: min(11.5rem, 32dvh);
-  border-radius: var(--radius-card);
-  overflow: hidden;
-  isolation: isolate;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background:
-    radial-gradient(120% 80% at 50% -10%, rgba(255, 45, 85, 0.1), transparent 55%),
-    linear-gradient(165deg, rgba(255, 255, 255, 0.05), transparent 42%),
-    var(--surface);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 14px 36px rgba(0, 0, 0, 0.28);
-  transition: height 320ms var(--ease-out);
-}
-
-.card-stage__slide {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 1.1rem 1.15rem 1.2rem;
-  box-sizing: border-box;
-  overflow: auto;
-  overscroll-behavior: contain;
-  will-change: opacity;
-  backface-visibility: hidden;
-}
-
-.card-stage__slide--settled {
-  opacity: 1;
-  transform: none;
-}
-
-.card-stage__slide--enter-next,
-.card-stage__slide--enter-prev {
-  z-index: 2;
-  animation: stage-enter 560ms var(--ease-spring) both;
-}
-
-.card-stage__slide--exit-next,
-.card-stage__slide--exit-prev {
-  z-index: 1;
-  pointer-events: none;
-  animation: stage-exit 520ms var(--ease-spring) both;
-}
-
-.card-stage__eyebrow {
-  margin: 0;
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent);
-  text-align: left;
-}
-
-.card-stage__body {
-  width: 100%;
-  min-width: 0;
-}
-
-.card-stage__dots {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 1.25rem;
-}
-
-.card-stage__dot {
-  width: 0.45rem;
-  height: 0.45rem;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
-  cursor: pointer;
-  transition: width var(--motion-fast), background-color var(--motion-fast),
-    transform var(--motion-fast), box-shadow var(--motion-fast);
-}
-
-.card-stage__dot--active {
-  width: 1.25rem;
-  background: var(--accent);
-  box-shadow: 0 0 0 3px rgba(255, 45, 85, 0.16);
-}
-
-.card-stage__dot:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.stage-recipe {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.stage-recipe__hero {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.95rem 1rem;
-  border-radius: 16px;
-  background:
-    linear-gradient(145deg, rgba(255, 45, 85, 0.12), transparent 55%),
-    var(--surface-raised);
-  border: 1px solid rgba(255, 45, 85, 0.18);
-}
-
-.stage-recipe__kicker {
-  font-size: 0.68rem;
-  font-weight: 750;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.stage-recipe__value {
-  font-size: 1.12rem;
-  font-weight: 750;
-  letter-spacing: -0.025em;
-  line-height: 1.25;
-  color: var(--fg);
-}
-
-.stage-recipe__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.55rem;
-}
-
-.stage-recipe__tile {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.8rem 0.85rem;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.stage-recipe__tile strong {
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--fg);
-}
-
-.stage-recipe__foot {
-  margin: 0;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--muted);
-  letter-spacing: -0.01em;
-}
-
-.stage-tracks {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-
-.stage-tracks__count {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 750;
-  letter-spacing: -0.02em;
-  color: var(--fg);
-}
-
-.stage-tracks__empty {
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.45;
-  color: var(--muted);
-}
-
-.stage-summary {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.stage-summary li {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  justify-content: flex-start;
-  min-height: 2.15rem;
-  padding: 0.45rem 0.6rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.stage-summary__n {
-  width: 1.45rem;
-  height: 1.45rem;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.stage-summary__name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 650;
-  font-size: 0.9rem;
-  letter-spacing: -0.015em;
-}
-
-.stage-summary__more {
-  justify-content: flex-start;
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 600;
-  border-style: dashed;
-}
-
-.stage-delivery {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.4rem;
-  text-align: left;
-}
-
-.stage-delivery__eyebrow {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.stage-delivery__title {
-  font-size: 1.05rem;
-  font-weight: 750;
-  letter-spacing: -0.02em;
-  color: var(--fg);
-}
-
-.stage-delivery__copy {
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: var(--muted);
-  max-width: 34ch;
-}
-
-@keyframes stage-enter {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes stage-exit {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-.page--render-focus .render-hero {
-  margin: 0;
-  flex-shrink: 0;
-}
-
-.page--render-focus .card-stage {
-  flex-shrink: 0;
-}
-
-.page--render-focus .cta-bar {
-  flex-shrink: 0;
-  margin-top: 0;
-  padding-bottom: 0;
 }
 
 .project-meta {
@@ -3895,17 +3622,20 @@ select.field__input option {
 @keyframes aurora-tick {
   0%,
   100% {
-    transform: rotate(calc((var(--i) / var(--n)) * 360deg)) translateY(-2.05rem)
+    transform: rotate(calc((var(--i) / var(--n)) * 360deg))
+    translateY(calc(var(--orbit-tick) * -1))
       scaleY(0.32);
     opacity: 0.28;
   }
   40% {
-    transform: rotate(calc((var(--i) / var(--n)) * 360deg)) translateY(-2.05rem)
+    transform: rotate(calc((var(--i) / var(--n)) * 360deg))
+    translateY(calc(var(--orbit-tick) * -1))
       scaleY(1);
     opacity: 0.95;
   }
   65% {
-    transform: rotate(calc((var(--i) / var(--n)) * 360deg)) translateY(-2.05rem)
+    transform: rotate(calc((var(--i) / var(--n)) * 360deg))
+    translateY(calc(var(--orbit-tick) * -1))
       scaleY(0.55);
     opacity: 0.55;
   }
@@ -4767,12 +4497,6 @@ select.field__input option {
   .page-stage--none,
   .option-menu,
   .option-menu--above,
-  .card-stage__slide,
-  .card-stage__slide--enter-next,
-  .card-stage__slide--enter-prev,
-  .card-stage__slide--exit-next,
-  .card-stage__slide--exit-prev,
-  .card-stage__slide--settled,
   .detail-focus,
   .render-hero__mark-layer,
   .render-hero__mark-layer--enter,
@@ -4790,7 +4514,8 @@ select.field__input option {
   }
 
   .render-hero__aurora-tick {
-    transform: rotate(calc((var(--i) / var(--n)) * 360deg)) translateY(-2.05rem)
+    transform: rotate(calc((var(--i) / var(--n)) * 360deg))
+    translateY(calc(var(--orbit-tick) * -1))
       scaleY(0.7);
     opacity: 0.65;
   }

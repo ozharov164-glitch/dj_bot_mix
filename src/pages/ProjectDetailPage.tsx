@@ -17,7 +17,6 @@ import {
 } from "../api/client";
 import { useAuth } from "../auth/AuthProvider";
 import { Button } from "../components/Button";
-import { CardStage, type StageCard } from "../components/CardStage";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { FlowBreadcrumb } from "../components/FlowBreadcrumb";
 import { IconArrowLeft, IconUpload } from "../components/icons";
@@ -31,7 +30,6 @@ import {
   projectAfterUploadResponse,
 } from "../lib/file-accept";
 import { EFFECT_HINTS, EFFECT_LABELS } from "../lib/effect-catalog";
-import { formatFileCount } from "../lib/plural";
 import {
   canEnqueueRender,
   nextRenderPollDelayMs,
@@ -413,93 +411,6 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
     (project.type === "SINGLE_EFFECT" && renderFeature) ||
     (project.type === "MIX" && mixRenderFeature);
 
-  const effectOrTransitionLabel =
-    project.type === "SINGLE_EFFECT"
-      ? EFFECT_LABELS[(project.singleEffect ?? "normalise") as SingleEffect]
-      : selectedTransition.labelRu;
-  const typeLabel = project.type === "SINGLE_EFFECT" ? "Один трек" : "Микс";
-  const styleLabel =
-    project.type === "SINGLE_EFFECT" ? "Эффект" : "Переходы";
-
-  const stageCards: StageCard[] = [
-    {
-      id: "settings",
-      title: "Как собираем",
-      body: (
-        <div className="stage-recipe">
-          <div className="stage-recipe__hero">
-            <span className="stage-recipe__kicker">{styleLabel}</span>
-            <strong className="stage-recipe__value">{effectOrTransitionLabel}</strong>
-          </div>
-          <div className="stage-recipe__grid">
-            <div className="stage-recipe__tile">
-              <span className="stage-recipe__kicker">Тип</span>
-              <strong>{typeLabel}</strong>
-            </div>
-            <div className="stage-recipe__tile">
-              <span className="stage-recipe__kicker">Формат</span>
-              <strong>{project.outputFormat.toUpperCase()}</strong>
-            </div>
-          </div>
-          <p className="stage-recipe__foot">
-            {formatFileCount(project.files.length)} в проекте
-          </p>
-        </div>
-      ),
-    },
-    {
-      id: "tracks",
-      title: "Треки",
-      body: (
-        <div className="stage-tracks">
-          <p className="stage-tracks__count">
-            {project.files.length === 0
-              ? "Пока пусто"
-              : formatFileCount(project.files.length)}
-          </p>
-          {project.files.length === 0 ? (
-            <p className="stage-tracks__empty">Файлы ещё не добавлены</p>
-          ) : (
-            <ul className="stage-summary">
-              {project.files.slice(0, 4).map((file, i) => (
-                <li key={file.id}>
-                  <span className="stage-summary__n">{i + 1}</span>
-                  <span className="stage-summary__name">
-                    {file.originalFilename}
-                  </span>
-                </li>
-              ))}
-              {project.files.length > 4 ? (
-                <li className="stage-summary__more">
-                  ещё {project.files.length - 4}
-                </li>
-              ) : null}
-            </ul>
-          )}
-        </div>
-      ),
-    },
-    {
-      id: "delivery",
-      title: "Куда придёт",
-      body: (
-        <div className="stage-delivery">
-          <span className="stage-delivery__eyebrow">Доставка</span>
-          <strong className="stage-delivery__title">
-            {renderJob?.status === "COMPLETED"
-              ? "Уже в чате с ботом"
-              : "Придёт в чат с ботом"}
-          </strong>
-          <p className="stage-delivery__copy">
-            {renderJob?.status === "COMPLETED"
-              ? "Откройте вложение в переписке — скачивать из приложения не нужно."
-              : "Можно закрыть приложение и подождать. Готовый файл появится во вложении."}
-          </p>
-        </div>
-      ),
-    },
-  ];
-
   return (
     <main
       className={`page page--detail${renderFocus ? " page--render-focus" : ""}`}
@@ -519,24 +430,28 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
             </span>
             Проекты
           </button>
-          <FlowBreadcrumb
-            trail={`Проекты → ${project.title}`}
-            steps={[
-              { id: "params", label: "Параметры", state: "done" },
-              { id: "files", label: "Файлы", state: filesStepState },
-              { id: "render", label: "Обработка", state: renderStepState },
-            ]}
-          />
-          <h1 className="page-title">{project.title}</h1>
-          <p className="project-meta">
-            {project.type === "SINGLE_EFFECT" ? "Один трек" : "Микс"}
-            {" · "}
-            {renderJob
-              ? renderStatusTitle(renderJob.status)
-              : project.status === "READY_TO_RENDER"
-                ? "Готов к обработке"
-                : statusFallback(project.status)}
-          </p>
+          {renderFocus ? null : (
+            <>
+              <FlowBreadcrumb
+                trail={`Проекты → ${project.title}`}
+                steps={[
+                  { id: "params", label: "Параметры", state: "done" },
+                  { id: "files", label: "Файлы", state: filesStepState },
+                  { id: "render", label: "Обработка", state: renderStepState },
+                ]}
+              />
+              <h1 className="page-title">{project.title}</h1>
+              <p className="project-meta">
+                {project.type === "SINGLE_EFFECT" ? "Один трек" : "Микс"}
+                {" · "}
+                {renderJob
+                  ? renderStatusTitle(renderJob.status)
+                  : project.status === "READY_TO_RENDER"
+                    ? "Готов к обработке"
+                    : statusFallback(project.status)}
+              </p>
+            </>
+          )}
         </div>
       </header>
 
@@ -565,7 +480,6 @@ export function ProjectDetailPage({ projectId, onBack }: ProjectDetailPageProps)
                 : null
             }
           />
-          <CardStage cards={stageCards} autoPlay={jobActive} intervalMs={3200} />
           {renderJob.status === "COMPLETED" ? (
             <div className="cta-bar cta-bar--symmetric">
               <Button
